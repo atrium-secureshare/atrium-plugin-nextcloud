@@ -21,7 +21,7 @@ and it targets Nextcloud 34 (min 34, max 34, tracking the tested env).
   under `lib/` autoload via the namespace in `appinfo/info.xml`. Composer manages
   PHP deps (`firebase/php-jwt` for ES256 verification). `vendor/` is git-ignored
   and rebuilt at build time; `composer.json`/`composer.lock` pin it.
-- **Frontend:** Vue 2.7 + TypeScript via webpack (`@nextcloud/webpack-vue-config`),
+- **Frontend:** Vue 3 + TypeScript via webpack (`@nextcloud/webpack-vue-config`),
   `@nextcloud/vue` components. `.npmrc` sets `legacy-peer-deps=true` so
   `npm install`/`npm ci` resolve the known-good tree.
 

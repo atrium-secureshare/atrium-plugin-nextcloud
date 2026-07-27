@@ -16,7 +16,7 @@
 		</NcNoteCard>
 
 		<NcTextField
-			:value.sync="email"
+			v-model="email"
 			type="email"
 			:label="t('atrium_secureshare', 'Recipient email')"
 			:error="emailTouched && !isEmailValid"
@@ -51,7 +51,8 @@
 			<NcDateTimePicker
 				v-model="expiresAt"
 				type="date"
-				:disabled-date="isDateDisabled"
+				:min="minExpiry"
+				:max="maxExpiry"
 				:placeholder="expiryRequired ? t('atrium_secureshare', 'Select a date') : t('atrium_secureshare', 'No expiry')" />
 			<p v-if="expiryRequired" class="atrium-share-form__hint">
 				{{ t('atrium_secureshare', 'Shares may last at most {days} days.', { days: policy.maxShareDurationDays }) }}
@@ -60,13 +61,13 @@
 
 		<NcTextField
 			v-if="!isFolder"
-			:value.sync="maxDownloads"
+			v-model="maxDownloads"
 			type="number"
 			min="1"
 			:label="t('atrium_secureshare', 'Maximum downloads')"
 			:helper-text="t('atrium_secureshare', 'Leave empty for unlimited downloads.')" />
 
-		<NcCheckboxRadioSwitch v-if="showEmailToggle" :checked.sync="sendEmail">
+		<NcCheckboxRadioSwitch v-if="showEmailToggle" v-model="sendEmail">
 			{{ t('atrium_secureshare', 'Notify the recipient by email') }}
 		</NcCheckboxRadioSwitch>
 
@@ -95,13 +96,13 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
-import NcDateTimePicker from '@nextcloud/vue/dist/Components/NcDateTimePicker.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcTextField from '@nextcloud/vue/dist/Components/NcTextField.js'
+import NcButton from '@nextcloud/vue/components/NcButton'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
+import NcDateTimePicker from '@nextcloud/vue/components/NcDateTimePicker'
+import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
+import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
+import NcSelect from '@nextcloud/vue/components/NcSelect'
+import NcTextField from '@nextcloud/vue/components/NcTextField'
 import CheckIcon from 'vue-material-design-icons/Check.vue'
 import PlusIcon from 'vue-material-design-icons/Plus.vue'
 import { translate as t } from '@nextcloud/l10n'
@@ -165,19 +166,20 @@ const expiryRequired = computed(() => (props.policy.maxShareDurationDays ?? 0) >
 // is either never or always notified, and there is nothing to toggle.
 const showEmailToggle = computed(() => props.policy.emailEnabled && props.policy.emailOptOutAllowed)
 
-function isDateDisabled(date: Date): boolean {
-	if (date.getTime() < startOfTomorrow().getTime()) {
-		return true
-	}
+// v9's NcDateTimePicker bounds the selectable range via min/max Date props (the
+// old disabled-date predicate is gone). min is tomorrow; max is the policy ceiling
+// (now + maxShareDurationDays), or unset when shares may last indefinitely.
+const minExpiry = computed(() => startOfTomorrow())
+const maxExpiry = computed<Date | undefined>(() => {
 	const maxDays = props.policy.maxShareDurationDays ?? 0
-	if (maxDays > 0) {
-		const max = new Date()
-		max.setHours(23, 59, 59, 999)
-		max.setDate(max.getDate() + maxDays)
-		return date.getTime() > max.getTime()
+	if (maxDays <= 0) {
+		return undefined
 	}
-	return false
-}
+	const max = new Date()
+	max.setHours(23, 59, 59, 999)
+	max.setDate(max.getDate() + maxDays)
+	return max
+})
 
 const isEmailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))
 
