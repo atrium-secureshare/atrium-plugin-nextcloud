@@ -26,7 +26,7 @@
 			:name="t('atrium_secureshare', 'Portal')"
 			:description="t('atrium_secureshare', 'The Atrium portal recipients are sent to. Leave empty to use this server\'s base URL.')">
 			<NcTextField
-				:value.sync="config.portalUrl"
+				v-model="config.portalUrl"
 				type="url"
 				:label="t('atrium_secureshare', 'Portal URL')"
 				placeholder="https://atrium.example.com" />
@@ -35,11 +35,11 @@
 		<NcSettingsSection
 			:name="t('atrium_secureshare', 'Email invitations')"
 			:description="t('atrium_secureshare', 'Control whether recipients are notified by email when a share is created.')">
-			<NcCheckboxRadioSwitch :checked.sync="config.emailEnabled" type="switch">
+			<NcCheckboxRadioSwitch v-model="config.emailEnabled" type="switch">
 				{{ t('atrium_secureshare', 'Send invitation emails') }}
 			</NcCheckboxRadioSwitch>
 			<NcCheckboxRadioSwitch
-				:checked.sync="config.emailOptOutAllowed"
+				v-model="config.emailOptOutAllowed"
 				:disabled="!config.emailEnabled"
 				type="switch">
 				{{ t('atrium_secureshare', 'Allow owners to skip notifying the recipient') }}
@@ -56,8 +56,8 @@
 				<NcCheckboxRadioSwitch
 					v-for="mode in allModes"
 					:key="mode.value"
-					:checked="config.allowedModes.includes(mode.value)"
-					@update:checked="toggleMode(mode.value, $event)">
+					:model-value="config.allowedModes.includes(mode.value)"
+					@update:model-value="toggleMode(mode.value, $event)">
 					{{ mode.label }}
 				</NcCheckboxRadioSwitch>
 				<p v-if="config.allowedModes.length === 0" class="atrium-admin__bad">
@@ -66,11 +66,11 @@
 			</fieldset>
 
 			<NcTextField
-				:value="String(config.maxShareDurationDays ?? 0)"
+				:model-value="String(config.maxShareDurationDays ?? 0)"
 				type="number"
 				min="0"
 				:label="t('atrium_secureshare', 'Maximum share duration in days (0 = unlimited)')"
-				@update:value="onMaxDurationInput" />
+				@update:model-value="onMaxDurationInput" />
 			<p class="atrium-admin__hint">
 				{{ t('atrium_secureshare', 'When set, every share must carry an expiry within this many days.') }}
 			</p>
@@ -80,18 +80,18 @@
 			:name="t('atrium_secureshare', 'Retention')"
 			:description="t('atrium_secureshare', 'How long an expired or exhausted share stays visible to its owner in the file sidebar before it is permanently deleted. During this window the owner can reactivate it by editing the expiry or download limit.')">
 			<NcTextField
-				:value="String(config.retentionDays ?? 0)"
+				:model-value="String(config.retentionDays ?? 0)"
 				type="number"
 				min="0"
 				:label="t('atrium_secureshare', 'Retention window in days (0 = delete immediately)')"
-				@update:value="onRetentionInput" />
+				@update:model-value="onRetentionInput" />
 		</NcSettingsSection>
 
 		<NcSettingsSection
 			:name="t('atrium_secureshare', 'Branding')"
 			:description="t('atrium_secureshare', 'Interim brand name shown in the sharing sidebar. This is a temporary app-local field until the Atrium core exposes a central brand name.')">
 			<NcTextField
-				:value.sync="config.whitelabelName"
+				v-model="config.whitelabelName"
 				:label="t('atrium_secureshare', 'Brand name')"
 				placeholder="Atrium" />
 		</NcSettingsSection>
@@ -109,13 +109,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcSettingsSection from '@nextcloud/vue/dist/Components/NcSettingsSection.js'
-import NcTextArea from '@nextcloud/vue/dist/Components/NcTextArea.js'
-import NcTextField from '@nextcloud/vue/dist/Components/NcTextField.js'
+import NcButton from '@nextcloud/vue/components/NcButton'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
+import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
+import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
+import NcSettingsSection from '@nextcloud/vue/components/NcSettingsSection'
+import NcTextArea from '@nextcloud/vue/components/NcTextArea'
+import NcTextField from '@nextcloud/vue/components/NcTextField'
 import { translate as t } from '@nextcloud/l10n'
 
 import { folderModes } from '../permissions'
