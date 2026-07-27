@@ -30,4 +30,13 @@ if (tsRule) {
 	}
 }
 
+// Nextcloud libraries and several transitive deps (axios, node-stdlib-browser
+// polyfill proxies) ship strict ESM (.mjs), which webpack 5 treats as
+// fullySpecified and refuses to resolve extensionless imports for. Relax that
+// for node_modules so the polyfill aliases and .mjs re-exports resolve.
+webpackConfig.module.rules.push({
+	test: /\.m?js$/,
+	resolve: { fullySpecified: false },
+})
+
 module.exports = webpackConfig
