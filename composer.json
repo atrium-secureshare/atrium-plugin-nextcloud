@@ -1,0 +1,32 @@
+{
+    "name": "atrium/atrium-secureshare",
+    "description": "Atrium Secureshare Nextcloud adapter",
+    "type": "project",
+    "license": "AGPL-3.0-or-later",
+    "require": {
+        "php": ">=8.1",
+        "firebase/php-jwt": "^7",
+        "symfony/polyfill-intl-normalizer": "^1"
+    },
+    "require-dev": {
+        "doctrine/dbal": "^4",
+        "nextcloud/ocp": "^34.0",
+        "phpunit/phpunit": "^10"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "OCA\\AtriumSecureShare\\": "lib/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OCA\\AtriumSecureShare\\Tests\\": "tests/",
+            "OCP\\": "vendor/nextcloud/ocp/OCP/",
+            "NCU\\": "vendor/nextcloud/ocp/NCU/"
+        }
+    }
+}

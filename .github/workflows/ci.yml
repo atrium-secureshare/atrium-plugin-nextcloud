@@ -1,0 +1,46 @@
+name: CI
+
+# PHP lint + PHPUnit and the frontend build (ts-loader type-checks, so a type
+# error fails the build). Runs on pull requests only (including Dependabot and
+# release-please PRs); the default branch is gated by these same checks via
+# branch protection.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          # Matches the local toolchain documented in AGENTS.md; composer.json
+          # requires >= 8.1.
+          php-version: '8.3'
+          tools: composer
+      # Verifies composer.json and that composer.lock is in step with it.
+      - run: composer validate --no-check-publish
+      - run: composer install --no-interaction --no-progress
+      - name: php -l
+        run: find appinfo lib tests -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+      - run: vendor/bin/phpunit
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      # .npmrc sets legacy-peer-deps=true, which npm ci honours.
+      - run: npm ci
+      - run: npm run build

@@ -1,0 +1,36 @@
+version: 2
+
+# Commit-message prefixes feed release-please: dependency updates use "fix"
+# (→ patch release, shows in the changelog), including npm dev-dependencies
+# since they build the shipped assets. Only workflow updates use "chore"
+# (no release). Every PR is assigned to jbrunner; the auto-merge workflow
+# merges semver-minor/patch once CI is green.
+updates:
+  - package-ecosystem: composer
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    assignees:
+      - jbrunner
+    commit-message:
+      prefix: fix
+
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    assignees:
+      - jbrunner
+    commit-message:
+      prefix: fix
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    assignees:
+      - jbrunner
+    commit-message:
+      prefix: chore

@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>atrium_secureshare</id>
+    <name>Atrium Secureshare</name>
+    <summary>Identity-aware secure external file sharing via Atrium</summary>
+    <description><![CDATA[Integrates Atrium Secureshare into the native Nextcloud sharing sidebar.
+External recipients are identified by email address; access is governed by the Atrium gateway
+(identity-bound, MFA via OIDC, mandatory terms-of-service acceptance and a full audit trail).]]></description>
+    <!-- Maintained by release-please (see release-please-config.json); the
+         packaging script derives the archive version from here. -->
+    <version>0.0.0</version><!-- x-release-please-version -->
+    <licence>AGPL-3.0-or-later</licence>
+    <author>Kanton Bern</author>
+    <namespace>AtriumSecureShare</namespace>
+    <!-- The `filesystem` type makes remote.php (WebDAV) load and boot this app,
+         which is required for the share provider to register: the Files list's
+         directory PROPFIND runs over WebDAV, and only apps of these types are
+         loaded there (see remote.php: loadApps(['filesystem','logging'])). Without
+         it, boot() — and thus IManager::registerShareProvider — never runs for the
+         listing request and the native "Shared" indicator stays empty. -->
+    <types>
+        <filesystem/>
+    </types>
+    <category>files</category>
+    <bugs>https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues</bugs>
+    <dependencies>
+        <!-- Tracks the Nextcloud version the app is built and tested against.
+             Widen the range only after validating on other majors. -->
+        <nextcloud min-version="34" max-version="34"/>
+    </dependencies>
+    <!-- Admin settings: trust key, portal URL, email + share policy, brand name.
+         The section id is the app id; AdminSettings attaches to it. -->
+    <settings>
+        <admin>OCA\AtriumSecureShare\Settings\AdminSettings</admin>
+        <admin-section>OCA\AtriumSecureShare\Settings\AdminSection</admin-section>
+    </settings>
+    <!-- Native activity integration: the provider renders the share lifecycle
+         (who shared/unshared what with whom) and external uploads (who uploaded
+         what into a shared folder) in the activity stream and the file-details
+         Activity tab. Downloads stay unsurfaced — see Activity\Provider. All
+         events are published via IActivityManager in ShareService. -->
+    <activity>
+        <settings>
+            <!-- Registers the upload type so co-recipients (non-authors) see the
+                 entry — the stream filters to registered types. See UploadSetting. -->
+            <setting>OCA\AtriumSecureShare\Activity\UploadSetting</setting>
+        </settings>
+        <providers>
+            <provider>OCA\AtriumSecureShare\Activity\Provider</provider>
+        </providers>
+    </activity>
+</info>
