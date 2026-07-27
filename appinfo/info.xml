@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
-<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>atrium_secureshare</id>
     <name>Atrium Secureshare</name>
     <summary>Identity-aware secure external file sharing via Atrium</summary>
@@ -9,7 +8,7 @@ External recipients are identified by email address; access is governed by the A
 (identity-bound, MFA via OIDC, mandatory terms-of-service acceptance and a full audit trail).]]></description>
     <!-- Maintained by release-please (see release-please-config.json); the
          packaging script derives the archive version from here. -->
-    <version>0.0.0</version><!-- x-release-please-version -->
+    <version>0.0.1</version><!-- x-release-please-version -->
     <licence>AGPL-3.0-or-later</licence>
     <author>Kanton Bern</author>
     <namespace>AtriumSecureShare</namespace>
