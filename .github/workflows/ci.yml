@@ -20,6 +20,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # Catches info.xml schema violations here instead of at App Store upload.
+      # The XSD is fetched with curl because xmllint's built-in loader has no
+      # TLS support and cannot resolve the https:// URL itself.
+      - name: Validate appinfo/info.xml
+        run: |
+          curl -sSLo /tmp/info.xsd https://apps.nextcloud.com/schema/apps/info.xsd
+          xmllint --noout --schema /tmp/info.xsd appinfo/info.xml
       - uses: shivammathur/setup-php@v2
         with:
           # Matches the local toolchain documented in AGENTS.md; composer.json
