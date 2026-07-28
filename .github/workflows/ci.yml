@@ -26,6 +26,15 @@ jobs:
           # requires >= 8.1.
           php-version: '8.3'
           tools: composer
+      # Catches info.xml schema violations here instead of at App Store upload.
+      - name: Validate appinfo/info.xml
+        run: |
+          php -r '
+            $xsd = "https://apps.nextcloud.com/schema/apps/info.xsd";
+            $doc = new DOMDocument();
+            $doc->load("appinfo/info.xml");
+            exit($doc->schemaValidate($xsd) ? 0 : 1);
+          '
       # Verifies composer.json and that composer.lock is in step with it.
       - run: composer validate --no-check-publish
       - run: composer install --no-interaction --no-progress
