@@ -5,7 +5,10 @@
 # Nextcloud expects, so it can be unpacked straight into custom_apps/ (and is the
 # shape the App Store consumes).
 #
-# Requires: node/npm, php/composer, tar.
+# Set APP_PRIVATE_KEY and APP_CERTIFICATE (PEM contents of the app's release
+# certificate) to additionally code-sign the app, see below.
+#
+# Requires: node/npm, php/composer, tar — plus docker when signing.
 # Usage: scripts/package.sh [outdir]   (default: ./dist)
 set -euo pipefail
 
@@ -44,7 +47,27 @@ mkdir -p "$STAGE/$APP_ID"
 cp -r appinfo lib js vendor templates img l10n "$STAGE/$APP_ID/"
 cp LICENSE THIRD-PARTY-LICENSES "$STAGE/$APP_ID/"
 
+# Code signing: writes appinfo/signature.json into the staged app before packing,
+# so it covers the archive's final contents. Only `occ` can produce it, so this
+# borrows the server from the container image instead of installing one — occ
+# bootstraps far enough to need a writable config dir, hence root (the tar below
+# normalises the resulting root-owned file).
+if [ -n "${APP_PRIVATE_KEY:-}" ]; then
+  [ -n "${APP_CERTIFICATE:-}" ] || { echo "APP_PRIVATE_KEY set without APP_CERTIFICATE" >&2; exit 1; }
+  NC_VERSION="$(sed -n 's:.*<nextcloud[^>]*min-version="\([0-9]*\)".*:\1:p' appinfo/info.xml | head -1)"
+  echo ">> Code-signing $APP_ID (nextcloud:$NC_VERSION-fpm-alpine)"
+  # Beside the app dir, not inside it: not hashed, not packed. occ takes only
+  # paths, so the key must touch the disk; umask scoped to keep it off the archive.
+  ( umask 077
+    printf '%s\n' "$APP_PRIVATE_KEY" > "$STAGE/sign.key"
+    printf '%s\n' "$APP_CERTIFICATE" > "$STAGE/sign.crt" )
+  docker run --rm -v "$STAGE:/stage" "nextcloud:$NC_VERSION-fpm-alpine" \
+    php /usr/src/nextcloud/occ integrity:sign-app \
+      --privateKey=/stage/sign.key --certificate=/stage/sign.crt --path="/stage/$APP_ID"
+  rm -f "$STAGE/sign.key" "$STAGE/sign.crt"
+fi
+
 mkdir -p "$OUT_DIR"
 TARBALL="$OUT_DIR/$APP_ID-$VERSION.tar.gz"
-tar -czf "$TARBALL" -C "$STAGE" "$APP_ID"
+tar --owner=0 --group=0 --numeric-owner -czf "$TARBALL" -C "$STAGE" "$APP_ID"
 echo "wrote $TARBALL"
