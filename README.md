@@ -78,7 +78,7 @@ and the operator applies the brand (see the core's configuration).
 - Sends **email invitations** that link to the Atrium portal, never a direct file
   link. The recipient authenticates at the portal.
 - Provides an **admin settings page** (trust key, portal URL, share and email
-  policy, interim brand name) and a **retention policy** for expired or revoked
+  policy, brand name) and a **retention policy** for expired or revoked
   shares.
 
 Access control, authentication and streaming are **not** done here. They are the
