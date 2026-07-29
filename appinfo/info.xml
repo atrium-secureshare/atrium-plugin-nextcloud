@@ -23,6 +23,11 @@ External recipients are identified by email address; access is governed by the A
     </types>
     <category>files</category>
     <bugs>https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues</bugs>
+    <screenshot>https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/core-listing.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/core-modal.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/core-dark.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/nextcloud-admin.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/nextcloud-sharing.png</screenshot>
     <dependencies>
         <!-- Tracks the Nextcloud version the app is built and tested against.
              Widen the range only after validating on other majors. -->
