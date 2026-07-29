@@ -89,7 +89,7 @@
 
 		<NcSettingsSection
 			:name="t('atrium_secureshare', 'Branding')"
-			:description="t('atrium_secureshare', 'Interim brand name shown in the sharing sidebar. This is a temporary app-local field until the Atrium core exposes a central brand name.')">
+			:description="t('atrium_secureshare', 'Brand name shown in the sharing sidebar, the shares navigation entry and the activity stream.')">
 			<NcTextField
 				v-model="config.whitelabelName"
 				:label="t('atrium_secureshare', 'Brand name')"

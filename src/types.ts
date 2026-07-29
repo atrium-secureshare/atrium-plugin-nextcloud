@@ -79,7 +79,7 @@ export interface SharePolicy {
 	allowedModes: number[]
 	/** Maximum share duration in days, or null when unlimited. */
 	maxShareDurationDays: number | null
-	/** Interim brand name shown in the sidebar heading. */
+	/** Brand name shown in the sidebar heading. */
 	whitelabelName: string
 }
 

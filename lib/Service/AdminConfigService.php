@@ -34,7 +34,7 @@ class AdminConfigService {
 	 * before the cleanup job hard-deletes it; 0 means no grace. Default 7.
 	 */
 	public const KEY_RETENTION_DAYS = 'retention_days';
-	/** Interim app-local brand name shown in the sidebar (until core theming). */
+	/** App-local brand name shown in the sidebar, shares view and activity. */
 	public const KEY_WHITELABEL_NAME = 'whitelabel_name';
 
 	/** Default retention grace window in days when the admin has set none. */
@@ -48,7 +48,7 @@ class AdminConfigService {
 		AtriumShare::MODE_DROPZONE,
 	];
 
-	/** Default brand name until the core exposes a central one. */
+	/** Neutral default brand name when the admin has set none. */
 	private const DEFAULT_WHITELABEL_NAME = 'Atrium';
 
 	public function __construct(

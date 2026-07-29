@@ -210,7 +210,7 @@ separate from the signed-token core API above.
 
 ## Admin settings & share policy
 
-The admin configures trust, portal, the email + share policy and an interim brand
+The admin configures trust, portal, the email + share policy and the brand
 name from **Settings → Administration → Atrium Secureshare**. All configuration
 lives in app config; there are no core changes.
 
