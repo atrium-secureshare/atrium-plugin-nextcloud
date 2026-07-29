@@ -93,7 +93,7 @@ boundary, and serves file contents to the core.
 
 ## Installation
 
-Install **Atrium Secureshare** from the **Nextcloud App Store**: in Nextcloud go
+Install **Atrium Secureshare** from the [Nextcloud App Store](https://apps.nextcloud.com/apps/atrium_secureshare): in Nextcloud go
 to *Apps*, search for "Atrium Secureshare" and enable it. This is the supported
 path and keeps the app up to date.
 
