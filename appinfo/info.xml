@@ -8,7 +8,7 @@ External recipients are identified by email address; access is governed by the A
 (identity-bound, MFA via OIDC, mandatory terms-of-service acceptance and a full audit trail).]]></description>
     <!-- Maintained by release-please (see release-please-config.json); the
          packaging script derives the archive version from here. -->
-    <version>0.0.1</version><!-- x-release-please-version -->
+    <version>0.0.2</version><!-- x-release-please-version -->
     <licence>AGPL-3.0-or-later</licence>
     <author>Kanton Bern</author>
     <namespace>AtriumSecureShare</namespace>

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v0.0.1...atrium-secureshare-v0.0.2) (2026-07-29)
+
+
+### Miscellaneous Chores
+
+* release 0.0.2 ([9217336](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/92173368ae108ab00e4fcb233ab3f3144df87b6b))
+
 ## 0.0.1 (2026-07-27)
 
 
