@@ -1,0 +1,85 @@
+name: release
+
+# Called by release-please.yml rather than triggered by the `release` event:
+# releases created with the default GITHUB_TOKEN start no further workflow runs.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+    secrets:
+      APP_PRIVATE_KEY:
+        required: true
+      APP_CERTIFICATE:
+        required: true
+      APPSTORE_TOKEN:
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # A missing secret arrives as an empty string, and package.sh then silently
+      # skips signing — but Nextcloud refuses a later update that drops a
+      # signature, so an unsigned release must not get out.
+      - name: Require the signing credentials
+        env:
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_CERTIFICATE: ${{ secrets.APP_CERTIFICATE }}
+          APPSTORE_TOKEN: ${{ secrets.APPSTORE_TOKEN }}
+        run: |
+          for name in APP_PRIVATE_KEY APP_CERTIFICATE APPSTORE_TOKEN; do
+            [ -n "${!name}" ] || { echo "::error::secret $name is unset or empty"; exit 1; }
+          done
+
+      # The tag carries the version release-please wrote to info.xml, the branch
+      # head does not.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+
+      - name: Build and code-sign the archive
+        env:
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_CERTIFICATE: ${{ secrets.APP_CERTIFICATE }}
+        run: scripts/package.sh dist
+
+      # Must precede the step below: the App Store fetches this URL.
+      - name: Attach the archive to the GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ inputs.tag }}" dist/atrium_secureshare-*.tar.gz
+
+      - name: Register the release with the Nextcloud App Store
+        env:
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APPSTORE_TOKEN: ${{ secrets.APPSTORE_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          archive=$(ls dist/atrium_secureshare-*.tar.gz)
+          # Over the archive as uploaded; the App Store re-downloads it and checks
+          # this against the app's certificate. Key via pipe, token via --config:
+          # neither ends up in an argv.
+          signature=$(printf '%s\n' "$APP_PRIVATE_KEY" \
+            | openssl dgst -sha512 -sign /dev/stdin "$archive" \
+            | openssl base64 -A)
+          printf 'header = "Authorization: Token %s"\n' "$APPSTORE_TOKEN" \
+            | curl -sS --fail-with-body --config - \
+                -X POST https://apps.nextcloud.com/api/v1/apps/releases \
+                -H 'Content-Type: application/json' \
+                -d "$(jq -n --arg s "$signature" \
+                      --arg d "https://github.com/$REPOSITORY/releases/download/$TAG/$(basename "$archive")" \
+                      '{download: $d, signature: $s}')"

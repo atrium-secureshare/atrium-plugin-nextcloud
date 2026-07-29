@@ -30,9 +30,12 @@ jobs:
       - name: Validate appinfo/info.xml
         run: |
           php -r '
-            $xsd = "https://apps.nextcloud.com/schema/apps/info.xsd";
             $doc = new DOMDocument();
             $doc->load("appinfo/info.xml");
+            $xsd = $doc->documentElement->getAttributeNS(
+              "http://www.w3.org/2001/XMLSchema-instance",
+              "noNamespaceSchemaLocation"
+            );
             exit($doc->schemaValidate($xsd) ? 0 : 1);
           '
       # Verifies composer.json and that composer.lock is in step with it.

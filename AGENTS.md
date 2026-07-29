@@ -87,13 +87,17 @@ path and enable the app.
 Versioning is [Conventional Commits](https://www.conventionalcommits.org/) →
 release-please (`.github/workflows/release-please.yml`): merging its release PR
 tags the release, writes `CHANGELOG.md`, bumps `appinfo/info.xml` (annotated with
-`x-release-please-version`) plus `package.json`, and the same workflow then
-attaches the built archive to the GitHub Release. `appinfo/info.xml` is the one
+`x-release-please-version`) plus `package.json`, and then calls
+`.github/workflows/release.yml` for that tag. `appinfo/info.xml` is the one
 source of truth for the app version, so the route-cache footgun below is handled
 by the release itself: every release bumps it.
 
-Signing the archive and pushing it to the App Store is a separate process, added
-once the app id is registered there.
+`release.yml` builds, signs and publishes to the App Store; it needs the secrets
+`APP_PRIVATE_KEY`, `APP_CERTIFICATE` (PEM release certificate, `CN` = app id,
+issued by Nextcloud) and `APPSTORE_TOKEN`. With the first two in the environment,
+`package.sh` also writes `appinfo/signature.json` — which requires docker, since
+only `occ` can produce it. **Once a release has carried that signature, Nextcloud
+refuses any later update without one.**
 
 CI (`.github/workflows/ci.yml`, pull requests only) runs `composer validate`,
 `php -l`, PHPUnit and the frontend build (ts-loader type-checks, so a type error
