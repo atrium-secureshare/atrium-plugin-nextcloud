@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.0](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v0.0.2...atrium-secureshare-v0.1.0) (2026-07-31)
+
+
+### Features
+
+* **nextcloud:** add support for nextcloud v33 ([e222210](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/e222210c51b0413ff419195b1233aa0ec0424ebf))
+* **nextcloud:** add support for nextcloud v33 ([b630c14](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/b630c14b937f15f7178099676eb16d72422788c3))
+
 ## [0.0.2](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v0.0.1...atrium-secureshare-v0.0.2) (2026-07-29)
 
 
