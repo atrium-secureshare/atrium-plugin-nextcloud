@@ -31,7 +31,7 @@ External recipients are identified by email address; access is governed by the A
     <dependencies>
         <!-- Tracks the Nextcloud version the app is built and tested against.
              Widen the range only after validating on other majors. -->
-        <nextcloud min-version="34" max-version="34"/>
+        <nextcloud min-version="33" max-version="34"/>
     </dependencies>
     <!-- Admin settings: trust key, portal URL, email + share policy, brand name.
          The section id is the app id; AdminSettings attaches to it. -->
