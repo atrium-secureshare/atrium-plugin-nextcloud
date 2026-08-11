@@ -99,6 +99,10 @@ issued by Nextcloud) and `APPSTORE_TOKEN`. With the first two in the environment
 only `occ` can produce it. **Once a release has carried that signature, Nextcloud
 refuses any later update without one.**
 
+It then scans the packaged archive with syft and publishes the resulting
+CycloneDX SBOM as a release asset, attested to the archive with the workflow's
+own identity so that anyone can verify it without a key.
+
 CI (`.github/workflows/ci.yml`, pull requests only) runs `composer validate`,
 `php -l`, PHPUnit and the frontend build (ts-loader type-checks, so a type error
 fails it).

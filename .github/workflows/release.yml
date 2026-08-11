@@ -55,11 +55,34 @@ jobs:
           APP_CERTIFICATE: ${{ secrets.APP_CERTIFICATE }}
         run: scripts/package.sh dist
 
+      - uses: anchore/sbom-action/download-syft@v0
+
+      # Scanned off the unpacked archive, so the inventory is what ships. It
+      # carries no composer.lock, hence the cataloger for an installed vendor/,
+      # and its js/ bundle names no npm packages, hence the lockfile beside it.
+      - name: Generate the SBOM
+        env:
+          TAG: ${{ inputs.tag }}
+          SYFT_FILE_METADATA_SELECTION: none
+        run: |
+          mkdir sbom-src
+          tar -xzf dist/atrium_secureshare-*.tar.gz -C sbom-src
+          cp package-lock.json sbom-src/
+          syft dir:sbom-src --select-catalogers +php-composer-installed-cataloger \
+            --source-name atrium_secureshare --source-version "${TAG##*-v}" \
+            -o cyclonedx-json=dist/sbom.cdx.json
+
+      - name: Attest the SBOM to the archive
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/atrium_secureshare-*.tar.gz
+          sbom-path: dist/sbom.cdx.json
+
       # Must precede the step below: the App Store fetches this URL.
-      - name: Attach the archive to the GitHub Release
+      - name: Attach the archive and the SBOM to the GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ inputs.tag }}" dist/atrium_secureshare-*.tar.gz
+        run: gh release upload "${{ inputs.tag }}" dist/atrium_secureshare-*.tar.gz dist/sbom.cdx.json
 
       - name: Register the release with the Nextcloud App Store
         env:
