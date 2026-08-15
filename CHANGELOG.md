@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.1](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v0.1.0...atrium-secureshare-v0.1.1) (2026-08-15)
+
+
+### Bug Fixes
+
+* allow sharing with an expiry on the current day ([#27](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/27)) ([7fce043](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/7fce0434ba63254c97a14005f7148da225382978)), closes [#26](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/26)
+* attest a CycloneDX SBOM to the release archive ([#24](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/24)) ([d0afaf8](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/d0afaf8f0eb0cc477800c83b5ca781b159e701b6))
+* Bump vue from 3.5.40 to 3.5.41 ([#23](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/23)) ([85e9ce2](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/85e9ce222c911ae82874373d38749b3228c55c4c))
+* Bump webpack from 5.109.0 to 5.109.2 ([#21](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/21)) ([9b99eb9](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/9b99eb9a0b539b4063c34cb58f1780a227e4a0af))
+* Bump webpack-cli from 7.2.1 to 7.2.2 ([#22](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/22)) ([9e35a68](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/9e35a68836a2be34403c3fdf5fc7a0f7b61d911e))
+
 ## [0.1.0](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v0.0.2...atrium-secureshare-v0.1.0) (2026-07-31)
 
 
