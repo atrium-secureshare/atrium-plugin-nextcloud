@@ -141,12 +141,11 @@ const isEditing = computed(() => props.editing !== null)
 
 const knownEmails = computed(() => props.shares.map((s) => s.recipientEmail))
 
-// The picker is day-granular; the earliest valid expiry is tomorrow (a same-day
-// expiry would lapse almost immediately).
-function startOfTomorrow(): Date {
+// The picker is day-granular and submitted dates run to the end of their day, so
+// today is a valid choice: the share then lasts until midnight.
+function startOfToday(): Date {
 	const d = new Date()
 	d.setHours(0, 0, 0, 0)
-	d.setDate(d.getDate() + 1)
 	return d
 }
 
@@ -167,9 +166,9 @@ const expiryRequired = computed(() => (props.policy.maxShareDurationDays ?? 0) >
 const showEmailToggle = computed(() => props.policy.emailEnabled && props.policy.emailOptOutAllowed)
 
 // v9's NcDateTimePicker bounds the selectable range via min/max Date props (the
-// old disabled-date predicate is gone). min is tomorrow; max is the policy ceiling
+// old disabled-date predicate is gone). min is today; max is the policy ceiling
 // (now + maxShareDurationDays), or unset when shares may last indefinitely.
-const minExpiry = computed(() => startOfTomorrow())
+const minExpiry = computed(() => startOfToday())
 const maxExpiry = computed<Date | undefined>(() => {
 	const maxDays = props.policy.maxShareDurationDays ?? 0
 	if (maxDays <= 0) {
