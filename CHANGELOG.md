@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.2.0](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v0.1.1...atrium-secureshare-v0.2.0) (2026-09-16)
+
+
+### Features
+
+* **nextcloud:** support Nextcloud 35 ([#41](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/41)) ([4e1c80b](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/4e1c80b96f609e52dc4937882f337897f58a746f))
+
+
+### Bug Fixes
+
+* Bump @babel/core from 8.0.1 to 8.0.5 ([#39](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/39)) ([491d98f](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/491d98f0f92243047d64c3545b829f7769670eac))
+* Bump @nextcloud/dialogs from 7.4.1 to 7.5.0 ([#35](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/35)) ([08927fc](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/08927fccd035f664e161aa427a460e859519d6f3))
+* Bump @nextcloud/vue from 9.11.0 to 9.12.0 ([#40](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/40)) ([11b3064](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/11b30641c50e4aad21c7ef9f6e768829b2372677))
+* Bump @nextcloud/vue from 9.9.0 to 9.11.0 ([#33](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/33)) ([86148b8](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/86148b8c232ab5b557f826af71e08155b6641109))
+* Bump @nextcloud/webpack-vue-config from 7.0.2 to 7.0.4 ([#28](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/28)) ([6109361](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/61093610d408aec4c0a53f0be0d041543ee1c491))
+* Bump css-loader from 7.1.4 to 7.1.5 ([#32](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/32)) ([f7d12a9](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/f7d12a96e5b59cfbf00bd84c2e95e35d48a80c40))
+* Bump sass from 1.102.0 to 1.103.1 ([#29](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/29)) ([23ff12f](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/23ff12fe9c7928a31492daff4fd35998d93ba6dc))
+* Bump sass from 1.103.1 to 1.104.0 ([#38](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/38)) ([1b32122](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/1b3212245243c12dbcca375a2aac8cf0d3c4d00e))
+* Bump sass-loader from 17.0.0 to 17.0.1 ([#36](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/36)) ([09e7c06](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/09e7c067ef7e0892f28fac519c5356af59e645e9))
+* Bump vue from 3.5.41 to 3.5.42 ([#31](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/31)) ([be68320](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/be683205e624aaf8060263c57782329dcf5998da))
+* Bump webpack from 5.109.2 to 5.110.1 ([#34](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/34)) ([3c7683a](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/3c7683a204b83e905f54a8c6d745512d67f1e812))
+* Bump webpack from 5.110.1 to 5.110.3 ([#37](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/37)) ([a802519](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/a802519650290c5030e642949950d2d484654bc9))
+* Bump webpack-cli from 7.2.2 to 7.2.3 ([#30](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/30)) ([aaef06c](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/aaef06c191915904f48769c0d68ec408d72fc426))
+
 ## [0.1.1](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v0.1.0...atrium-secureshare-v0.1.1) (2026-08-15)
 
 
