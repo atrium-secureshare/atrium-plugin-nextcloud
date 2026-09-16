@@ -87,7 +87,7 @@ boundary, and serves file contents to the core.
 
 ## Requirements
 
-- **Nextcloud 34** (the tested target).
+- **Nextcloud 33–35**.
 - A running **[Atrium Core](https://github.com/atrium-secureshare/atrium-core)**
   reachable by your external recipients.
 

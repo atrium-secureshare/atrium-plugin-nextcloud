@@ -12,8 +12,7 @@ Read it before changing behaviour in those areas, since it records decisions tha
 must not silently regress. This file covers only how to navigate, build,
 test and release.
 
-The app id is `atrium_secureshare`, the PHP namespace is `OCA\AtriumSecureShare`,
-and it targets Nextcloud 34 (min 34, max 34, tracking the tested env).
+The app id is `atrium_secureshare` and the PHP namespace is `OCA\AtriumSecureShare`.
 
 ## Tech stack
 
