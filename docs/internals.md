@@ -5,8 +5,7 @@ product overview see [README.md](README.md); for build/test/release see
 [AGENTS.md](AGENTS.md).
 
 The app id is `atrium_secureshare` and the PHP namespace is
-`OCA\AtriumSecureShare`. It targets Nextcloud 34 (min 34, max 34, tracking the
-tested env).
+`OCA\AtriumSecureShare`.
 
 The backend is PHP on the Nextcloud App Framework (`OCP\AppFramework`); the
 frontend is Vue 2.7 + TypeScript bundled with webpack. Two surfaces exist, kept
