@@ -4,7 +4,7 @@
     ".": {
       "release-type": "node",
       "initial-version": "0.0.1",
-      "extra-files": ["appinfo/info.xml"]
+      "extra-files": ["appinfo/info.xml", "publiccode.yml"]
     }
   }
 }

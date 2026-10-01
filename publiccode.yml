@@ -1,0 +1,118 @@
+# Metadata for public-sector software directories (https://publiccodeyml.github.io).
+# Pinned to 0.5.0: swiss/publiccode-editor validates with publiccode-parser-go
+# v5.2.1, which rejects anything newer.
+# softwareVersion and releaseDate are stamped by release-please through the
+# annotations on their lines; do not edit the values by hand.
+publiccodeYmlVersion: "0.5.0"
+
+name: Atrium Secureshare for Nextcloud
+applicationSuite: Atrium Secureshare
+url: https://github.com/atrium-secureshare/atrium-plugin-nextcloud
+landingURL: https://apps.nextcloud.com/apps/atrium_secureshare
+softwareVersion: "0.2.0" # x-release-please-version
+releaseDate: "2026-09-16" # x-release-please-date
+logo: https://raw.githubusercontent.com/atrium-secureshare/atrium-core/main/.github/icon.svg
+
+platforms:
+  - web
+
+categories:
+  - document-management
+  - collaboration
+  - it-security
+
+developmentStatus: beta
+softwareType: addon
+
+organisation:
+  uri: https://ld.admin.ch/canton/2
+  name: Bern
+
+intendedAudience:
+  countries:
+    - CH
+  scope:
+    - government
+    - local-authorities
+
+description:
+  en:
+    localisedName: Atrium Secureshare for Nextcloud
+    shortDescription: Identity-bound external file sharing from the native Nextcloud sharing sidebar
+    longDescription: |
+      Atrium Secureshare lets staff share files with people outside the
+      organisation directly from Nextcloud, without provisioning accounts for
+      those recipients and without exposing Nextcloud to the public internet.
+
+      The app adds an Atrium section to the native Files sharing sidebar, where
+      an owner creates and manages external shares addressed to a recipient's
+      email address. The recipient never reaches Nextcloud: they authenticate
+      against the organisation's identity provider and collect the file through
+      the Atrium Secureshare Core gateway, which enforces multi-factor
+      authentication, acceptance of the Terms of Service and a full audit trail.
+      Only the gateway is internet-facing, so Nextcloud can stay in the internal
+      network.
+
+      Because recipients are never entries in the Nextcloud user directory, they
+      cannot impersonate internal staff in the address book, they leave no stale
+      guest objects behind and they do not count towards user limits. Shares can
+      be files or folders, carry an expiry date and, for files, a maximum
+      download count. Folder shares can be read-only, a dropzone that only
+      accepts uploads, or a workspace in which recipients see either just their
+      own uploads or the whole folder. Shared items show Nextcloud's own native
+      "Shared" indicator, so there is no parallel user interface.
+
+      Administrators configure the trust key, portal URL, email and share policy,
+      brand name and retention policy from a settings page inside Nextcloud.
+
+      This app is the Nextcloud side of Atrium Secureshare only. It requires the
+      Atrium Secureshare Core gateway, which is published separately and runs as
+      its own deployment.
+    documentation: https://github.com/atrium-secureshare/atrium-plugin-nextcloud/tree/main/docs
+    features:
+      - Identity-bound shares created from the native Files sharing sidebar
+      - No Nextcloud account, guest account or licence for external recipients
+      - Nextcloud stays off the public internet, only the gateway is exposed
+      - Expiry dates and download caps per share
+      - Read-only, write-only and read-own folder shares
+      - Native "Shared" indicator and a shares overview in the Files navigation
+      - Email invitations to the branded portal instead of direct file links
+      - Admin settings for trust key, portal URL, share and email policy
+      - Retention policy that purges expired and revoked shares
+    screenshots:
+      - https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/nextcloud-sharing.png
+      - https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/nextcloud-admin.png
+      - https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/core-listing.png
+      - https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/core-modal.png
+      - https://raw.githubusercontent.com/atrium-secureshare/atrium-plugin-nextcloud/main/docs/screenshots/core-dark.png
+
+legal:
+  license: AGPL-3.0-or-later
+  mainCopyrightOwner: Kanton Bern
+
+maintenance:
+  type: contract
+  contractors:
+    - name: Bedag Informatik AG
+      email: info@bedag.ch
+      website: https://www.bedag.ch
+      until: "2031-12-31"
+  contacts:
+    - name: Lukas Furer
+      email: lukas.furer@be.ch
+      affiliation: Amt für Informatik und Organisation, Abteilung Business Services
+
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - de
+    - fr
+    - it
+    - en
+
+dependsOn:
+  open:
+    - name: Nextcloud
+      versionMin: "33"
+      versionMax: "35"
+    - name: Atrium Secureshare Core
