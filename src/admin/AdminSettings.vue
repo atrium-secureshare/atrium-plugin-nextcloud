@@ -77,6 +77,45 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			:name="t('atrium_secureshare', 'Resharing permission')"
+			:description="t('atrium_secureshare', 'Choose how Atrium treats the global admin settings for resharing. A resharing restriction set by a file\'s owner is never overridden by any of these options.')">
+			<fieldset class="atrium-admin__resharing">
+				<NcCheckboxRadioSwitch
+					v-model="config.resharingPolicy"
+					value="follow"
+					name="atrium-resharing"
+					type="radio">
+					{{ t('atrium_secureshare', 'Apply global sharing policy (recommended)') }}
+				</NcCheckboxRadioSwitch>
+				<p class="atrium-admin__hint">
+					{{ t('atrium_secureshare', 'The plugin follows the standard admin settings under Sharing → Allow resharing.') }}
+				</p>
+
+				<NcCheckboxRadioSwitch
+					v-model="config.resharingPolicy"
+					value="strict"
+					name="atrium-resharing"
+					type="radio">
+					{{ t('atrium_secureshare', 'Restrictive (deny resharing through the plugin)') }}
+				</NcCheckboxRadioSwitch>
+				<p class="atrium-admin__hint">
+					{{ t('atrium_secureshare', 'Overrides the global admin settings. Users can only share files they own themselves.') }}
+				</p>
+
+				<NcCheckboxRadioSwitch
+					v-model="config.resharingPolicy"
+					value="permissive"
+					name="atrium-resharing"
+					type="radio">
+					{{ t('atrium_secureshare', 'Permissive (ignore the global admin restriction)') }}
+				</NcCheckboxRadioSwitch>
+				<p class="atrium-admin__hint">
+					{{ t('atrium_secureshare', 'Allows resharing even when it is disabled globally in Nextcloud. If an owner has explicitly denied resharing for a file, it stays blocked here as well.') }}
+				</p>
+			</fieldset>
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('atrium_secureshare', 'Retention')"
 			:description="t('atrium_secureshare', 'How long an expired or exhausted share stays visible to its owner in the file sidebar before it is permanently deleted. During this window the owner can reactivate it by editing the expiry or download limit.')">
 			<NcTextField
@@ -152,9 +191,16 @@ function onRetentionInput(value: string): void {
 	max-width: 640px;
 }
 
-.atrium-admin__modes {
+.atrium-admin__modes,
+.atrium-admin__resharing {
 	margin-block-end: 16px;
 	border: none;
+}
+
+/* The explanation belongs to the radio above it, not to the next option. */
+.atrium-admin__resharing .atrium-admin__hint {
+	margin-block-end: 12px;
+	margin-inline-start: 28px;
 }
 
 .atrium-admin__hint {

@@ -55,6 +55,7 @@ class AdminSettings implements IDelegatedSettings {
 				AdminConfigService::KEY_EMAIL_ENABLED,
 				AdminConfigService::KEY_EMAIL_OPT_OUT_ALLOWED,
 				AdminConfigService::KEY_ALLOWED_MODES,
+				AdminConfigService::KEY_RESHARING_POLICY,
 				AdminConfigService::KEY_MAX_SHARE_DURATION_DAYS,
 				AdminConfigService::KEY_RETENTION_DAYS,
 				AdminConfigService::KEY_WHITELABEL_NAME,

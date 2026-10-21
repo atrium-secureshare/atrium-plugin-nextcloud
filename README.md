@@ -77,9 +77,12 @@ and the operator applies the brand (see the core's configuration).
   is no parallel UI, and it uses only documented Nextcloud extension points.
 - Sends **email invitations** that link to the Atrium portal, never a direct file
   link. The recipient authenticates at the portal.
-- Provides an **admin settings page** (trust key, portal URL, share and email
-  policy, brand name) and a **retention policy** for expired or revoked
+- Provides an **admin settings page** (trust key, portal URL, share, resharing
+  and email policy, brand name) and a **retention policy** for expired or revoked
   shares.
+- **Respects Nextcloud's own permissions:** only what the sharing user may really
+  do with the file is offered and accepted, down to the resharing rules and a
+  folder's upload modes.
 
 Access control, authentication and streaming are **not** done here. They are the
 core's job. This app persists shares, enforces the core's signed-token trust

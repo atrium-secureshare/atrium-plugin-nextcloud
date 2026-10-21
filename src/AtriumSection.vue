@@ -44,7 +44,7 @@ const props = defineProps<{ node: FileNode }>()
 
 const isFolder = computed(() => props.node?.type === FileType.Folder)
 
-const { policy } = usePolicy()
+const { policy } = usePolicy(toRef(props, 'node'))
 const { shares, loading, error, createShare, updateShare, revokeShare, copyLink } = useSharesAPI(toRef(props, 'node'))
 
 const editing = ref<AtriumShare | null>(null)

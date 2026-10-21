@@ -220,9 +220,13 @@ lives in app config; there are no core changes.
   validating front door). `setPublicKey` accepts only an ES256 (P-256) PEM (RSA
   and other curves are rejected) or empty (clears trust); `computeFingerprint`
   returns the `SHA256:base64` shape the core logs so an admin can compare by eye.
-  `getAllowedModes` sanitises to the known 0..3 modes and never returns empty.
+  `getAllowedModes` sanitises to the known 0..3 modes and never returns empty;
+  `getResharingPolicy` does the same for the three resharing options (`follow`,
+  `strict`, `permissive`, unknown falls back to `follow`).
   `getAll()` (admin-only, includes the key) and `getPolicy()` (public subset, no
-  key) are the two serialisers every consumer reads through.
+  key) are the two serialisers every consumer reads through. The resharing option
+  is deliberately NOT in `getPolicy()`: the sidebar reads the decision per node
+  (below), never the raw option.
 - **`Settings\AdminSection` / `Settings\AdminSettings`**: the `IIconSection` +
   `IDelegatedSettings` pair registered in `info.xml` `<settings>`. `getForm()`
   seeds the current config into the initial page state and returns the `admin`
@@ -243,7 +247,38 @@ lives in app config; there are no core changes.
   mandatory). This is the only creation path, so the server is the authority; the
   sidebar UI only mirrors the policy. `SidebarShareController::policy`
   (`GET .../api/v1/policy`, `#[NoAdminRequired]`) exposes `getPolicy()` so the
-  sidebar can shape the form. The trust key never leaves the admin surface.
+  sidebar can shape the form; with `?fileId=` it answers the same policy narrowed
+  to that node (below). The trust key never leaves the admin surface.
+- **Node permissions (`Service\NodeSharePolicy`).** The admin policy says what is
+  allowed in general; the node says what THIS user can do with THIS file, and the
+  narrower of the two wins. Being able to read a node does not imply being
+  allowed to pass it on, and a folder the sharing user may only read cannot carry
+  an upload mode: such a share would advertise an upload that Nextcloud's storage
+  layer then refuses with `403 upload_forbidden`. Both answers read Nextcloud's
+  permissions: `PERMISSION_SHARE` for passing the node on (whose denial that is,
+  see the next bullet) and
+  `PERMISSION_CREATE` for the upload modes (1 to 3), which no resharing option
+  ever widens. `SidebarShareController::create` and `update` enforce it (403 for a
+  node the caller may not share, 400 for a mode they cannot exercise) and
+  `policy(?fileId)` mirrors it into the form: `canShare` plus `allowedModes`
+  intersected with the node's, so nothing is offered that the create call would
+  refuse.
+- **Two sources of a resharing denial, told apart.** The node's share bit alone
+  does not say WHO refused. The file owner's per-share grant reaches the node
+  through the share's permissions, and Nextcloud then masks the global *Allow
+  resharing* switch on top of it (together with "sharing disabled for this user"
+  and a mount's `enable_sharing` option) through the `sharing_mask` storage
+  wrapper `SetupManager` installs. A globally disabled resharing therefore looks
+  exactly like an owner's denial on `Node::getPermissions()`. The unmasked grant
+  comes from the share itself, `OCP\Files\Storage\ISharedStorage::getShare()`
+  (the seam core's own DAV layer uses to report `oc:share-permissions`), and it
+  is checked first: no grant, no share, whatever the admin configured. Only then
+  does `resharing_policy` decide: `follow` (default) takes Nextcloud's masked
+  verdict as it stands, `strict` refuses every received node even where Nextcloud
+  would allow it, and `permissive` drops the global restriction alone, so a user
+  or mount excluded from sharing stays excluded. A node that is not a received
+  share (own file, group folder, external storage) never reaches the option: its
+  mask is the whole answer.
 - **Email policy.** `MailService::sendInvitation($share, $fileName,
   $userRequestedEmail)` consults `AdminConfigService`: nothing is sent when
   invitations are globally disabled, nor when the owner opted out and opting out

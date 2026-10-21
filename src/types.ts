@@ -75,7 +75,12 @@ export interface SharePolicy {
 	emailEnabled: boolean
 	/** Whether the owner may opt out of notifying the recipient per share. */
 	emailOptOutAllowed: boolean
-	/** Sharing modes the policy permits (subset of 0..3). */
+	/**
+	 * Sharing modes the policy permits (subset of 0..3). When the policy was
+	 * requested for a node, it is already intersected with the modes the user's
+	 * permissions on that node allow, so an upload mode only appears when they may
+	 * really upload there.
+	 */
 	allowedModes: number[]
 	/** Maximum share duration in days, or null when unlimited. */
 	maxShareDurationDays: number | null
@@ -83,8 +88,30 @@ export interface SharePolicy {
 	whitelabelName: string
 }
 
+/**
+ * NodeSharePolicy is the share policy narrowed to one node: the admin policy
+ * plus what the user's own Nextcloud permissions on that node allow. It is what
+ * the sidebar form reads, so it never offers something the server would refuse.
+ */
+export interface NodeSharePolicy extends SharePolicy {
+	/**
+	 * Whether the user may share this node externally at all. False when Nextcloud
+	 * denies them passing it on (the file's owner or the admin forbids resharing).
+	 */
+	canShare: boolean
+}
+
+/**
+ * ResharingPolicy is how the plugin treats Nextcloud's global resharing setting:
+ * follow it, be stricter (never reshare), or ignore the global restriction. A
+ * resharing denial by the file's owner is never overridden by any of them.
+ */
+export type ResharingPolicy = 'follow' | 'strict' | 'permissive'
+
 /** AdminConfig is the full admin configuration (SharePolicy plus trust config). */
 export interface AdminConfig extends SharePolicy {
+	/** How the plugin treats Nextcloud's global "allow resharing" setting. */
+	resharingPolicy: ResharingPolicy
 	/** Core signing key in PEM form; '' when trust is not configured. */
 	corePublicKey: string
 	/** SHA256 fingerprint of the installed key, or null when none is set. */
