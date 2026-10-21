@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.0](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v1.0.0...atrium-secureshare-v1.1.0) (2026-10-21)
+
+
+### Features
+
+* apply Nextcloud's resharing and folder permissions to external shares ([#63](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/63)) ([d966fa4](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/d966fa473074c5337453d5c8123ff18ef26bfde6)), closes [#62](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/62)
+
+
+### Bug Fixes
+
+* Bump @babel/core from 8.0.6 to 8.0.7 ([#56](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/56)) ([a9b3bda](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/a9b3bdaed7e55dce36b2b9d1ad67760702624d5e))
+* Bump @nextcloud/webpack-vue-config from 7.0.4 to 7.1.0 ([#57](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/57)) ([acb6f3d](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/acb6f3d43ba0539f2742a0541b4367f230a846f1))
+* Bump sass from 1.105.0 to 1.105.1 ([#55](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/55)) ([c3eaea5](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/c3eaea5d0da9bc4eb7db3d6790fc8eb35c07e073))
+* Bump sass from 1.105.1 to 1.105.2 ([#58](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/58)) ([e864be4](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/e864be4dea0c7da52dce10629b8a1c8ff739d514))
+* Bump vue from 3.5.43 to 3.5.44 ([#59](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/59)) ([1cbf0d0](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/1cbf0d03a236fbff690a954caee563a2e641282d))
+* Bump vue-material-design-icons from 5.3.1 to 5.4.0 ([#61](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/61)) ([cb35046](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/cb35046206103e91a0790ac42a8bd2c73bd2030e))
+* Bump webpack from 5.111.1 to 5.112.0 ([#60](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/60)) ([157bbb5](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/157bbb5ea38599eabb933da89acac4b984fa16f5))
+
 ## [1.0.0](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v0.2.0...atrium-secureshare-v1.0.0) (2026-10-01)
 
 
