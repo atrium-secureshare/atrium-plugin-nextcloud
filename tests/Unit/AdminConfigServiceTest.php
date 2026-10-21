@@ -113,6 +113,32 @@ final class AdminConfigServiceTest extends TestCase {
 		$this->service()->setAllowedModes([0, 5]);
 	}
 
+	public function testGetResharingPolicyDefaultsToFollowingNextcloud(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		// Return the injected default (3rd arg) so the service default surfaces.
+		$appConfig->method('getValueString')->willReturnArgument(2);
+		self::assertSame(AdminConfigService::RESHARING_FOLLOW, $this->service($appConfig)->getResharingPolicy());
+	}
+
+	public function testGetResharingPolicyFallsBackOnUnknownStoredValue(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('anything-goes');
+		self::assertSame(AdminConfigService::RESHARING_FOLLOW, $this->service($appConfig)->getResharingPolicy());
+	}
+
+	public function testSetResharingPolicyPersistsKnownValue(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->expects(self::once())
+			->method('setValueString')
+			->with(Application::APP_ID, AdminConfigService::KEY_RESHARING_POLICY, AdminConfigService::RESHARING_PERMISSIVE);
+		$this->service($appConfig)->setResharingPolicy(AdminConfigService::RESHARING_PERMISSIVE);
+	}
+
+	public function testSetResharingPolicyRejectsUnknownValue(): void {
+		$this->expectException(\InvalidArgumentException::class);
+		$this->service()->setResharingPolicy('whatever');
+	}
+
 	public function testGetMaxShareDurationDaysReturnsNullWhenZero(): void {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueInt')->willReturn(0);
@@ -180,6 +206,9 @@ final class AdminConfigServiceTest extends TestCase {
 		self::assertArrayNotHasKey('corePublicKey', $policy);
 		self::assertArrayHasKey('allowedModes', $policy);
 		self::assertArrayHasKey('whitelabelName', $policy);
+		// The raw resharing option stays admin-only: the sidebar reads the decision
+		// per node (canShare), never the option itself.
+		self::assertArrayNotHasKey('resharingPolicy', $policy);
 	}
 
 	private function service(?IAppConfig $appConfig = null): AdminConfigService {

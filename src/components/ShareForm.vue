@@ -7,7 +7,10 @@
 -->
 <template>
 	<form class="atrium-share-form" @submit.prevent="onSubmit">
-		<NcNoteCard v-if="!canShare" type="warning">
+		<NcNoteCard v-if="!policy.canShare" type="warning">
+			{{ t('atrium_secureshare', 'You are not allowed to share this item externally.') }}
+		</NcNoteCard>
+		<NcNoteCard v-else-if="modeOptions.length === 0" type="warning">
 			{{ t('atrium_secureshare', 'Sharing is disabled by the administrator for this item.') }}
 		</NcNoteCard>
 
@@ -108,11 +111,11 @@ import PlusIcon from 'vue-material-design-icons/Plus.vue'
 import { translate as t } from '@nextcloud/l10n'
 
 import { fileModes, folderModes, ShareMode } from '../permissions'
-import type { AtriumShare, SharePolicy, ShareForm } from '../types'
+import type { AtriumShare, NodeSharePolicy, ShareForm } from '../types'
 
 const props = defineProps<{
 	isFolder: boolean
-	policy: SharePolicy
+	policy: NodeSharePolicy
 	// The node's existing active shares — the source of the email autocomplete and
 	// the edit-mode detection (a recipient already present is edited, not doubled).
 	shares: AtriumShare[]
@@ -154,9 +157,10 @@ const modeOptions = computed(() => {
 	return base.filter((m) => props.policy.allowedModes.includes(m.value))
 })
 
-// A file is always mode 0; sharing it is possible only if the policy allows mode 0.
-// A folder is shareable if at least one of its modes is allowed.
-const canShare = computed(() => modeOptions.value.length > 0)
+// Sharing needs both: permission to pass this node on at all, and at least one
+// mode left after the admin policy and the node's own permissions narrowed the
+// list (a file needs mode 0 allowed, a folder any one of its modes).
+const canShare = computed(() => props.policy.canShare && modeOptions.value.length > 0)
 
 const expiryRequired = computed(() => (props.policy.maxShareDurationDays ?? 0) > 0)
 

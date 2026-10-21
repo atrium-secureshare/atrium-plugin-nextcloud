@@ -8,6 +8,7 @@ use OCA\AtriumSecureShare\AppInfo\Application;
 use OCA\AtriumSecureShare\Db\AtriumShare;
 use OCA\AtriumSecureShare\Service\AdminConfigService;
 use OCA\AtriumSecureShare\Service\FileResolver;
+use OCA\AtriumSecureShare\Service\NodeSharePolicy;
 use OCA\AtriumSecureShare\Service\PortalConfig;
 use OCA\AtriumSecureShare\Service\ShareService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -44,6 +45,7 @@ class SidebarShareController extends OCSController {
 		private readonly FileResolver $fileResolver,
 		private readonly PortalConfig $portalConfig,
 		private readonly AdminConfigService $adminConfig,
+		private readonly NodeSharePolicy $nodePolicy,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -53,10 +55,33 @@ class SidebarShareController extends OCSController {
 	 * policy exposes the public share policy the sidebar needs to shape the create
 	 * form. It deliberately never returns the trust key — any logged-in user may
 	 * read it, but only an admin sees the full config.
+	 *
+	 * With a $fileId the answer is narrowed to what the caller may actually do with
+	 * that node: `canShare` reports whether they may share it externally at all,
+	 * and `allowedModes` is the admin policy intersected with the modes the node's
+	 * own permissions permit, so the form never offers an upload mode the storage
+	 * layer would later refuse. Without one it stays the plain global policy (the
+	 * shares view reads it that way for the brand name).
 	 */
 	#[NoAdminRequired]
-	public function policy(): DataResponse {
-		return new DataResponse($this->adminConfig->getPolicy());
+	public function policy(?int $fileId = null): DataResponse {
+		$policy = $this->adminConfig->getPolicy();
+		$policy['canShare'] = true;
+		if ($fileId === null) {
+			return new DataResponse($policy);
+		}
+
+		$uid = $this->requireUid();
+		$node = $this->fileResolver->resolve($uid, $fileId);
+		if ($node === null) {
+			throw new OCSNotFoundException('file not found');
+		}
+		$policy['canShare'] = $this->nodePolicy->canShare($node, $uid);
+		$policy['allowedModes'] = array_values(array_intersect(
+			$policy['allowedModes'],
+			$this->nodePolicy->availableModes($node),
+		));
+		return new DataResponse($policy);
 	}
 
 	/**
@@ -124,6 +149,9 @@ class SidebarShareController extends OCSController {
 		$this->assertPermissions($permissions, $isFolder);
 		$maxDownloads = $this->validateMaxDownloads($maxDownloads, $isFolder);
 		$expires = $this->parseExpiry($expiresAt);
+		// The caller's own permissions come first: being allowed to share the node
+		// at all outranks every admin policy question about the share itself.
+		$this->enforceNodePermissions($node, $uid, $permissions);
 		$this->enforceSharePolicy($permissions, $expires);
 
 		$share = $this->shareService->createShare(
@@ -175,6 +203,7 @@ class SidebarShareController extends OCSController {
 		$this->assertPermissions($permissions, $isFolder);
 		$maxDownloads = $this->validateMaxDownloads($maxDownloads, $isFolder);
 		$expires = $this->parseExpiry($expiresAt);
+		$this->enforceNodePermissions($node, $uid, $permissions);
 		$this->enforceSharePolicy($permissions, $expires);
 
 		try {
@@ -244,6 +273,21 @@ class SidebarShareController extends OCSController {
 		$maxExpiry = (new \DateTime())->modify("+{$maxDays} days");
 		if ($expiresAt > $maxExpiry) {
 			throw new OCSBadRequestException("share duration exceeds the maximum of {$maxDays} days");
+		}
+	}
+
+	/**
+	 * enforceNodePermissions applies the caller's actual Nextcloud permissions on
+	 * the node, the authority the admin policy cannot widen: they must be allowed
+	 * to share it on at all (403), and the chosen mode must be one they can really
+	 * exercise (400), so a share never promises an upload the storage layer refuses.
+	 */
+	private function enforceNodePermissions(Node $node, string $uid, int $permissions): void {
+		if (!$this->nodePolicy->canShare($node, $uid)) {
+			throw new OCSForbiddenException('you are not allowed to share this item');
+		}
+		if (!in_array($permissions, $this->nodePolicy->availableModes($node), true)) {
+			throw new OCSBadRequestException('your permissions on this item do not allow this sharing mode');
 		}
 	}
 

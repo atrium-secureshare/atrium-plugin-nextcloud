@@ -27,6 +27,8 @@ class AdminConfigService {
 	public const KEY_EMAIL_OPT_OUT_ALLOWED = 'email_opt_out_allowed';
 	/** JSON array of allowed sharing modes (subset of 0..3). */
 	public const KEY_ALLOWED_MODES = 'allowed_modes';
+	/** How the plugin treats Nextcloud's global resharing setting (see NodeSharePolicy). */
+	public const KEY_RESHARING_POLICY = 'resharing_policy';
 	/** Maximum share duration in days; 0 means unlimited. */
 	public const KEY_MAX_SHARE_DURATION_DAYS = 'max_share_duration_days';
 	/**
@@ -36,6 +38,30 @@ class AdminConfigService {
 	public const KEY_RETENTION_DAYS = 'retention_days';
 	/** App-local brand name shown in the sidebar, shares view and activity. */
 	public const KEY_WHITELABEL_NAME = 'whitelabel_name';
+
+	/**
+	 * Resharing policy: follow Nextcloud's global "allow resharing" setting. The
+	 * default, and the only value that changes with the global setting.
+	 */
+	public const RESHARING_FOLLOW = 'follow';
+	/**
+	 * Resharing policy: never let a user pass on a node they only received, no
+	 * matter what the global setting says. Stricter than Nextcloud.
+	 */
+	public const RESHARING_STRICT = 'strict';
+	/**
+	 * Resharing policy: allow resharing even when Nextcloud forbids it globally. An
+	 * owner's per-share denial still blocks the share, since that one is never
+	 * overridden by any policy.
+	 */
+	public const RESHARING_PERMISSIVE = 'permissive';
+
+	/** The three known resharing policies; anything else falls back to FOLLOW. */
+	private const RESHARING_POLICIES = [
+		self::RESHARING_FOLLOW,
+		self::RESHARING_STRICT,
+		self::RESHARING_PERMISSIVE,
+	];
 
 	/** Default retention grace window in days when the admin has set none. */
 	private const DEFAULT_RETENTION_DAYS = 7;
@@ -73,6 +99,7 @@ class AdminConfigService {
 			'emailEnabled' => $this->isEmailEnabled(),
 			'emailOptOutAllowed' => $this->isEmailOptOutAllowed(),
 			'allowedModes' => $this->getAllowedModes(),
+			'resharingPolicy' => $this->getResharingPolicy(),
 			'maxShareDurationDays' => $this->getMaxShareDurationDays(),
 			'retentionDays' => $this->getRetentionDays(),
 			'whitelabelName' => $this->getWhitelabelName(),
@@ -179,6 +206,30 @@ class AdminConfigService {
 		}
 		sort($modes);
 		$this->appConfig->setValueArray(Application::APP_ID, self::KEY_ALLOWED_MODES, $modes);
+	}
+
+	/**
+	 * getResharingPolicy returns how the plugin treats Nextcloud's global resharing
+	 * setting (follow, strict or permissive), defaulting to following it. An
+	 * unknown stored value falls back to FOLLOW, so a malformed config never widens
+	 * the policy. It is deliberately not part of getPolicy(): the sidebar reads the
+	 * decision per node (see NodeSharePolicy), never the raw option.
+	 */
+	public function getResharingPolicy(): string {
+		$policy = $this->appConfig->getValueString(Application::APP_ID, self::KEY_RESHARING_POLICY, self::RESHARING_FOLLOW);
+		return in_array($policy, self::RESHARING_POLICIES, true) ? $policy : self::RESHARING_FOLLOW;
+	}
+
+	/**
+	 * setResharingPolicy stores the resharing option.
+	 *
+	 * @throws \InvalidArgumentException on an unknown policy
+	 */
+	public function setResharingPolicy(string $policy): void {
+		if (!in_array($policy, self::RESHARING_POLICIES, true)) {
+			throw new \InvalidArgumentException('unknown resharing policy: ' . $policy);
+		}
+		$this->appConfig->setValueString(Application::APP_ID, self::KEY_RESHARING_POLICY, $policy);
 	}
 
 	/** getMaxShareDurationDays returns the cap in days, or null when unlimited. */

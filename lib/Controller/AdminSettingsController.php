@@ -40,6 +40,7 @@ class AdminSettingsController extends Controller {
 		?bool $emailEnabled = null,
 		?bool $emailOptOutAllowed = null,
 		?array $allowedModes = null,
+		?string $resharingPolicy = null,
 		?int $maxShareDurationDays = null,
 		?int $retentionDays = null,
 		?string $whitelabelName = null,
@@ -61,6 +62,9 @@ class AdminSettingsController extends Controller {
 			}
 			if ($allowedModes !== null) {
 				$this->configService->setAllowedModes($allowedModes);
+			}
+			if ($resharingPolicy !== null) {
+				$this->configService->setResharingPolicy($resharingPolicy);
 			}
 			if ($maxShareDurationDays !== null) {
 				$this->configService->setMaxShareDurationDays($maxShareDurationDays);

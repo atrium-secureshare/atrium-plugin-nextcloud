@@ -8,6 +8,7 @@ use OCA\AtriumSecureShare\Controller\SidebarShareController;
 use OCA\AtriumSecureShare\Db\AtriumShare;
 use OCA\AtriumSecureShare\Service\AdminConfigService;
 use OCA\AtriumSecureShare\Service\FileResolver;
+use OCA\AtriumSecureShare\Service\NodeSharePolicy;
 use OCA\AtriumSecureShare\Service\PortalConfig;
 use OCA\AtriumSecureShare\Service\ShareService;
 use OCA\AtriumSecureShare\Tests\MocksNodes;
@@ -16,6 +17,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
+use OCP\Constants;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\NotPermittedException;
@@ -24,6 +26,7 @@ use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserSession;
+use OCP\Share\IManager as IShareManager;
 use PHPUnit\Framework\TestCase;
 
 final class SidebarShareControllerTest extends TestCase {
@@ -65,7 +68,7 @@ final class SidebarShareControllerTest extends TestCase {
 	 * @param array<string,mixed> $opts
 	 */
 	public function testCreateRejectsInvalidModel(string $nodeType, string $email, array $opts): void {
-		$node = $nodeType === 'folder' ? $this->createMock(Folder::class) : $this->file('a.txt');
+		$node = $nodeType === 'folder' ? $this->folder() : $this->file('a.txt');
 		$controller = $this->controller($this->createMock(ShareService::class), $this->resolverReturning($node));
 		$this->expectException(OCSBadRequestException::class);
 		$controller->create(99, $email, ...$opts);
@@ -116,7 +119,7 @@ final class SidebarShareControllerTest extends TestCase {
 	 * @param array<string,mixed> $opts
 	 */
 	public function testCreateRejectsByPolicy(array $config, string $nodeType, array $opts): void {
-		$node = $nodeType === 'folder' ? $this->createMock(Folder::class) : $this->file('a.txt');
+		$node = $nodeType === 'folder' ? $this->folder() : $this->file('a.txt');
 		$controller = $this->controller(
 			$this->createMock(ShareService::class),
 			$this->resolverReturning($node),
@@ -152,6 +155,120 @@ final class SidebarShareControllerTest extends TestCase {
 		self::assertSame('bob@example.com', $data['recipientEmail']);
 	}
 
+	/**
+	 * Being able to see a node is not being allowed to pass it on: a node the user
+	 * only received is governed by the resharing policy, and a denial is a 403
+	 * before any share exists.
+	 *
+	 * @dataProvider reshareDenials
+	 */
+	public function testCreateRejectsNodeTheUserMayNotReshare(int $maskedPermissions, int $sharePermissions, string $resharingPolicy): void {
+		$service = $this->createMock(ShareService::class);
+		$service->expects(self::never())->method('createShare');
+		$controller = $this->controller(
+			$service,
+			$this->resolverReturning($this->receivedFile('report.pdf', $maskedPermissions, $sharePermissions)),
+			null,
+			$this->nodePolicy($resharingPolicy),
+		);
+
+		$this->expectException(OCSForbiddenException::class);
+		$controller->create(99, 'carol@example.com');
+	}
+
+	/** @return array<string,array{0:int,1:string,2:string}> */
+	public static function reshareDenials(): array {
+		$all = Constants::PERMISSION_ALL;
+		$withoutShare = $all & ~Constants::PERMISSION_SHARE;
+		return [
+			// Nextcloud reports the global setting by clearing the share bit.
+			'global setting forbids resharing' => [$withoutShare, $all, AdminConfigService::RESHARING_FOLLOW],
+			'plugin is stricter than the global setting' => [$all, $all, AdminConfigService::RESHARING_STRICT],
+			// The owner's own denial outranks even the permissive option.
+			'owner denied resharing of the file' => [$all, $withoutShare, AdminConfigService::RESHARING_PERMISSIVE],
+		];
+	}
+
+	/** The permissive option ignores the global restriction, nothing else. */
+	public function testCreateAllowsReshareWhenPolicyIsPermissive(): void {
+		$service = $this->createMock(ShareService::class);
+		$service->expects(self::once())->method('createShare')->willReturn($this->share(fileId: 99, ownerUid: 'alice'));
+		$globallyDenied = $this->receivedFile('report.pdf', Constants::PERMISSION_ALL & ~Constants::PERMISSION_SHARE, Constants::PERMISSION_ALL);
+		$controller = $this->controller(
+			$service,
+			$this->resolverReturning($globallyDenied),
+			null,
+			$this->nodePolicy(AdminConfigService::RESHARING_PERMISSIVE),
+		);
+
+		self::assertSame('bob@example.com', $controller->create(99, 'carol@example.com')->getData()['recipientEmail']);
+	}
+
+	/**
+	 * An upload mode on a folder the sharing user may only read would create a
+	 * share whose upload fails in Nextcloud's storage layer, so it is refused.
+	 */
+	public function testCreateRejectsUploadModeTheUserCannotExercise(): void {
+		$readOnlyFolder = $this->folder(Constants::PERMISSION_ALL & ~Constants::PERMISSION_CREATE);
+		$service = $this->createMock(ShareService::class);
+		$service->expects(self::never())->method('createShare');
+		$controller = $this->controller($service, $this->resolverReturning($readOnlyFolder));
+
+		$this->expectException(OCSBadRequestException::class);
+		$controller->create(99, 'bob@example.com', permissions: 1);
+	}
+
+	public function testUpdateRejectsUploadModeTheUserCannotExercise(): void {
+		$service = $this->createMock(ShareService::class);
+		$service->method('getById')->willReturn($this->share(fileId: 99, ownerUid: 'alice'));
+		$service->expects(self::never())->method('updateShare');
+		$readOnlyFolder = $this->folder(Constants::PERMISSION_ALL & ~Constants::PERMISSION_CREATE);
+		$controller = $this->controller($service, $this->resolverReturning($readOnlyFolder));
+
+		$this->expectException(OCSBadRequestException::class);
+		$controller->update(7, permissions: 2);
+	}
+
+	/**
+	 * Asked for one node, the policy is narrowed to what the caller can really do
+	 * with it, so the sidebar form offers nothing the create call would refuse.
+	 */
+	public function testPolicyForNodeIntersectsModesWithNodePermissions(): void {
+		$readOnlyFolder = $this->folder(Constants::PERMISSION_ALL & ~Constants::PERMISSION_CREATE);
+		$controller = $this->controller(
+			$this->createMock(ShareService::class),
+			$this->resolverReturning($readOnlyFolder),
+			$this->adminConfigWithPolicy([0, 1, 2, 3]),
+		);
+
+		$data = $controller->policy(99)->getData();
+
+		self::assertTrue($data['canShare']);
+		self::assertSame([0], $data['allowedModes']);
+	}
+
+	public function testPolicyForNodeReportsThatSharingIsNotAllowed(): void {
+		$controller = $this->controller(
+			$this->createMock(ShareService::class),
+			$this->resolverReturning($this->receivedFile('report.pdf', Constants::PERMISSION_ALL, Constants::PERMISSION_ALL)),
+			$this->adminConfigWithPolicy([0, 1, 2, 3]),
+			$this->nodePolicy(AdminConfigService::RESHARING_STRICT),
+		);
+
+		self::assertFalse($controller->policy(99)->getData()['canShare']);
+	}
+
+	public function testPolicyForUnknownNodeReturns404(): void {
+		$controller = $this->controller(
+			$this->createMock(ShareService::class),
+			$this->resolverReturning(null),
+			$this->adminConfigWithPolicy([0, 1, 2, 3]),
+		);
+
+		$this->expectException(OCSNotFoundException::class);
+		$controller->policy(99);
+	}
+
 	public function testPolicyReturnsPublicSubset(): void {
 		$config = $this->createMock(AdminConfigService::class);
 		$config->method('getPolicy')->willReturn([
@@ -168,6 +285,8 @@ final class SidebarShareControllerTest extends TestCase {
 		self::assertSame([0, 1], $data['allowedModes']);
 		self::assertSame('Acme Share', $data['whitelabelName']);
 		self::assertArrayNotHasKey('corePublicKey', $data);
+		// Without a node nothing node-specific can block the caller.
+		self::assertTrue($data['canShare']);
 	}
 
 	public function testUpdateReturns404WhenShareMissing(): void {
@@ -299,15 +418,34 @@ final class SidebarShareControllerTest extends TestCase {
 		self::assertSame(99, $data[1]['fileId']);
 	}
 
-	private function controller(ShareService $service, FileResolver $resolver, ?AdminConfigService $adminConfig = null): SidebarShareController {
+	private function controller(
+		ShareService $service,
+		FileResolver $resolver,
+		?AdminConfigService $adminConfig = null,
+		?NodeSharePolicy $nodePolicy = null,
+	): SidebarShareController {
 		return new SidebarShareController(
 			$this->createMock(IRequest::class),
 			$service,
 			$resolver,
 			$this->portalConfig(),
 			$adminConfig ?? $this->adminConfig(),
+			$nodePolicy ?? $this->nodePolicy(),
 			$this->userSession('alice'),
 		);
+	}
+
+	/**
+	 * nodePolicy builds a real NodeSharePolicy (final, so not mockable) over mocks.
+	 * The default follows Nextcloud, so the base tests exercise everything but the
+	 * node permissions.
+	 */
+	private function nodePolicy(string $resharingPolicy = AdminConfigService::RESHARING_FOLLOW): NodeSharePolicy {
+		$adminConfig = $this->createMock(AdminConfigService::class);
+		$adminConfig->method('getResharingPolicy')->willReturn($resharingPolicy);
+		$shareManager = $this->createMock(IShareManager::class);
+		$shareManager->method('sharingDisabledForUser')->willReturn(false);
+		return new NodeSharePolicy($adminConfig, $shareManager);
 	}
 
 	/**
@@ -323,6 +461,24 @@ final class SidebarShareControllerTest extends TestCase {
 		return $config;
 	}
 
+	/**
+	 * adminConfigWithPolicy builds an AdminConfigService whose getPolicy() answers
+	 * the given modes, for the tests that read the policy endpoint.
+	 *
+	 * @param int[] $allowedModes
+	 */
+	private function adminConfigWithPolicy(array $allowedModes): AdminConfigService {
+		$config = $this->createMock(AdminConfigService::class);
+		$config->method('getPolicy')->willReturn([
+			'emailEnabled' => true,
+			'emailOptOutAllowed' => true,
+			'allowedModes' => $allowedModes,
+			'maxShareDurationDays' => null,
+			'whitelabelName' => 'Atrium',
+		]);
+		return $config;
+	}
+
 	/** portalConfig builds a real PortalConfig (final, so not mockable) over mocks. */
 	private function portalConfig(): PortalConfig {
 		$appConfig = $this->createMock(IAppConfig::class);
@@ -333,16 +489,48 @@ final class SidebarShareControllerTest extends TestCase {
 	}
 
 	private function userSession(string $uid): IUserSession {
-		$user = $this->createMock(IUser::class);
-		$user->method('getUID')->willReturn($uid);
 		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($user);
+		$session->method('getUser')->willReturn($this->user($uid));
 		return $session;
 	}
 
-	private function file(string $name): File {
+	private function user(string $uid): IUser {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($uid);
+		return $user;
+	}
+
+	/**
+	 * file builds a node on the caller's own storage with full permissions, the
+	 * ordinary case; the node-permission tests pass their own.
+	 */
+	private function file(string $name, int $permissions = Constants::PERMISSION_ALL): File {
 		$file = $this->createMock(File::class);
 		$file->method('getName')->willReturn($name);
+		$file->method('getPermissions')->willReturn($permissions);
+		$file->method('getStorage')->willReturn($this->storageMock());
+		return $file;
+	}
+
+	private function folder(int $permissions = Constants::PERMISSION_ALL): Folder {
+		$folder = $this->createMock(Folder::class);
+		$folder->method('getName')->willReturn('shared-folder');
+		$folder->method('getPermissions')->willReturn($permissions);
+		$folder->method('getStorage')->willReturn($this->storageMock());
+		return $folder;
+	}
+
+	/**
+	 * receivedFile is a file the caller reached through someone else's share:
+	 * $maskedPermissions is Nextcloud's own verdict (the global resharing setting
+	 * clears the share bit there), $sharePermissions what the owner granted.
+	 */
+	private function receivedFile(string $name, int $maskedPermissions, int $sharePermissions): File {
+		$file = $this->createMock(File::class);
+		$file->method('getName')->willReturn($name);
+		$file->method('getPermissions')->willReturn($maskedPermissions);
+		$file->method('getStorage')->willReturn($this->sharedStorageMock($sharePermissions));
+		$file->method('getMountPoint')->willReturn($this->mountMock());
 		return $file;
 	}
 

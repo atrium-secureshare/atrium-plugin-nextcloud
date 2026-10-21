@@ -18,6 +18,7 @@ final class AdminSettingsControllerTest extends TestCase {
 		$config->expects(self::once())->method('setEmailEnabled')->with(false);
 		$config->expects(self::once())->method('setEmailOptOutAllowed')->with(true);
 		$config->expects(self::once())->method('setAllowedModes')->with([0, 1]);
+		$config->expects(self::once())->method('setResharingPolicy')->with('strict');
 		$config->expects(self::once())->method('setMaxShareDurationDays')->with(7);
 		$config->expects(self::once())->method('setRetentionDays')->with(14);
 		$config->expects(self::once())->method('setWhitelabelName')->with('Acme Share');
@@ -28,6 +29,7 @@ final class AdminSettingsControllerTest extends TestCase {
 			emailEnabled: false,
 			emailOptOutAllowed: true,
 			allowedModes: [0, 1],
+			resharingPolicy: 'strict',
 			maxShareDurationDays: 7,
 			retentionDays: 14,
 			whitelabelName: 'Acme Share',

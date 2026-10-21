@@ -28,6 +28,7 @@ export function useAdminSettings() {
 				emailEnabled: config.emailEnabled,
 				emailOptOutAllowed: config.emailOptOutAllowed,
 				allowedModes: config.allowedModes,
+				resharingPolicy: config.resharingPolicy,
 				maxShareDurationDays: config.maxShareDurationDays ?? 0,
 				retentionDays: config.retentionDays ?? 0,
 				whitelabelName: config.whitelabelName,
