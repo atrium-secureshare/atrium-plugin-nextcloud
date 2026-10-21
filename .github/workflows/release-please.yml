@@ -5,6 +5,16 @@ name: release-please
 on:
   push:
     branches: [main]
+  # Dependabot's PRs are auto-merged with the GITHUB_TOKEN (see
+  # dependabot-auto-merge.yml), and GitHub creates no workflow run for events
+  # that token triggers, so the push trigger above never fires for them. A
+  # weekly run picks up whatever accumulated on main in the meantime; a run
+  # without new commits is a no-op, since release-please derives its state
+  # from the git history rather than from the event. Tuesday, because
+  # Dependabot's weekly updates default to Monday and want a full day to land.
+  schedule:
+    - cron: "0 4 * * 2"
+  workflow_dispatch:
 
 permissions:
   contents: write
