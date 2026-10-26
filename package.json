@@ -23,7 +23,7 @@
     "vue-material-design-icons": "^5.4.0"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.7",
+    "@babel/core": "^8.0.9",
     "@nextcloud/webpack-vue-config": "^7.1.0",
     "babel-loader": "^10.1.1",
     "css-loader": "^7.1.5",
