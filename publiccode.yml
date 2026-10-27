@@ -9,8 +9,8 @@ name: Atrium Secureshare for Nextcloud
 applicationSuite: Atrium Secureshare
 url: https://github.com/atrium-secureshare/atrium-plugin-nextcloud
 landingURL: https://apps.nextcloud.com/apps/atrium_secureshare
-softwareVersion: "1.1.0" # x-release-please-version
-releaseDate: "2026-10-21" # x-release-please-date
+softwareVersion: "1.1.1" # x-release-please-version
+releaseDate: "2026-10-27" # x-release-please-date
 logo: https://raw.githubusercontent.com/atrium-secureshare/atrium-core/main/.github/icon.svg
 
 platforms:
