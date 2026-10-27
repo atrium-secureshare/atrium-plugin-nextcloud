@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.1](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v1.1.0...atrium-secureshare-v1.1.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* Bump @babel/core from 8.0.7 to 8.0.9 ([#70](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/70)) ([cdc0258](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/cdc0258bcf35f4b48955f46bc477b78747f5684e))
+* Bump @nextcloud/files from 4.1.0 to 4.1.1 ([#71](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/71)) ([349cd35](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/349cd354564483d6747801942fb9399633f0ffbe))
+* Bump @nextcloud/vue from 9.13.1 to 9.14.0 ([#72](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/72)) ([efc6a76](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/efc6a76e70adbdc2a12d2e0eb06616c20f6da1d0))
+* Bump linkifyjs from 4.3.3 to 4.4.0 ([#67](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/67)) ([08ed8f5](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/08ed8f55e7c5a2a637b9024397d7da92f7ec3637))
+* Bump sass from 1.105.2 to 1.106.1 ([#68](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/68)) ([04db84d](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/04db84da96cac0f030ec912925e5432817458fd0))
+* Bump webpack from 5.112.0 to 5.112.2 ([#69](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/69)) ([1255e32](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/1255e32750638f43c09d85f5a1528ad9ea3e8b2b))
+* Bump webpack-dev-server from 6.0.0 to 6.1.0 ([#66](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/issues/66)) ([273fbae](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/commit/273fbaeff6c73422d4811f54d48fd6c14fd57eac))
+
 ## [1.1.0](https://github.com/atrium-secureshare/atrium-plugin-nextcloud/compare/atrium-secureshare-v1.0.0...atrium-secureshare-v1.1.0) (2026-10-21)
 
 
