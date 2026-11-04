@@ -20,12 +20,12 @@ final class AtriumShareProviderTest extends TestCase {
 		$active2 = ShareFactory::make(['id' => 3, 'fileId' => 10, 'recipientEmail' => 'carol@example.com', 'permissions' => 0]);
 
 		$mapper = $this->createMock(AtriumShareMapper::class);
-		$mapper->method('findByParentFolder')->with(99, 'alice')->willReturn([$active1, $expired, $active2]);
+		$mapper->expects(self::once())->method('findByParentFolder')->with(99, 'alice')->willReturn([$active1, $expired, $active2]);
 
 		$seenTypes = [];
 		$manager = $this->fluentShareManager($seenTypes);
 
-		$folder = $this->createMock(Folder::class);
+		$folder = $this->createStub(Folder::class);
 		$folder->method('getId')->willReturn(99);
 
 		$provider = new AtriumShareProvider($mapper, $manager);
@@ -52,13 +52,13 @@ final class AtriumShareProviderTest extends TestCase {
 
 	/** inertProvider builds the provider for the recipient-side / lifecycle contract tests, which touch no data. */
 	private function inertProvider(): AtriumShareProvider {
-		return new AtriumShareProvider($this->createMock(AtriumShareMapper::class), $this->createMock(IManager::class));
+		return new AtriumShareProvider($this->createStub(AtriumShareMapper::class), $this->createStub(IManager::class));
 	}
 
 	private function fluentShareManager(array &$seenTypes): IManager {
-		$manager = $this->createMock(IManager::class);
+		$manager = $this->createStub(IManager::class);
 		$manager->method('newShare')->willReturnCallback(function () use (&$seenTypes): IShare {
-			$share = $this->createMock(IShare::class);
+			$share = $this->createStub(IShare::class);
 			foreach ([
 				'setId', 'setProviderId', 'setNodeId', 'setShareOwner', 'setSharedBy',
 				'setSharedWith', 'setPermissions', 'setShareTime', 'setExpirationDate',

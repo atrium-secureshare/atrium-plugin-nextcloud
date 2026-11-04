@@ -18,17 +18,22 @@ use OCP\Files\NotPermittedException;
 use OCP\IDBConnection;
 use OCP\Security\ISecureRandom;
 use OCP\Share\IManager as IShareManager;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
+// The collaborators built in setUp() are shared by every test, but each test
+// sets expectations only on the ones it is about.
+#[AllowMockObjectsWithoutExpectations]
 final class ShareServiceTest extends TestCase {
 	private AtriumShareMapper&MockObject $mapper;
 	private IDBConnection&MockObject $db;
 	private ISecureRandom&MockObject $random;
 	private MailService&MockObject $mail;
 	private IActivityManager&MockObject $activityManager;
-	private IShareManager&MockObject $shareManager;
+	private IShareManager&Stub $shareManager;
 	private IEvent&MockObject $event;
 	private ShareService $service;
 
@@ -38,7 +43,7 @@ final class ShareServiceTest extends TestCase {
 		$this->random = $this->createMock(ISecureRandom::class);
 		$this->mail = $this->createMock(MailService::class);
 		$this->activityManager = $this->createMock(IActivityManager::class);
-		$this->shareManager = $this->createMock(IShareManager::class);
+		$this->shareManager = $this->createStub(IShareManager::class);
 
 		// A fluent IEvent stub so the setter chain in the activity publishers works;
 		// the create/revoke tests add their own expects() on the two subject setters.
@@ -55,7 +60,7 @@ final class ShareServiceTest extends TestCase {
 			$this->mail,
 			$this->activityManager,
 			$this->shareManager,
-			$this->createMock(LoggerInterface::class),
+			$this->createStub(LoggerInterface::class),
 		);
 	}
 
@@ -160,7 +165,7 @@ final class ShareServiceTest extends TestCase {
 		$share->setPermissions(AtriumShare::MODE_READ_ONLY);
 		$share->setMaxDownloads(null);
 		$share->setEmailSent(true);
-		$this->mapper->method('find')->with(7)->willReturn($share);
+		$this->mapper->expects(self::once())->method('find')->with(7)->willReturn($share);
 		$this->mapper->method('update')->willReturnArgument(0);
 		$this->mail->expects(self::never())->method('sendInvitation');
 		$expiry = new \DateTime('+10 days');
@@ -208,7 +213,7 @@ final class ShareServiceTest extends TestCase {
 
 	public function testRevokeShareHardDeletesForOwner(): void {
 		$share = $this->existingShare('alice');
-		$this->mapper->method('find')->with(7)->willReturn($share);
+		$this->mapper->expects(self::once())->method('find')->with(7)->willReturn($share);
 		// Revoke is a hard delete now (no soft revoked_at), so no PII lingers.
 		$this->mapper->expects(self::once())->method('delete')->with($share);
 		$this->mapper->expects(self::never())->method('update');
@@ -218,7 +223,7 @@ final class ShareServiceTest extends TestCase {
 
 	public function testRevokeSharePublishesUnshareActivityToOwnerStream(): void {
 		$share = $this->existingShare('alice');
-		$this->mapper->method('find')->with(7)->willReturn($share);
+		$this->mapper->expects(self::once())->method('find')->with(7)->willReturn($share);
 		$this->mapper->method('delete')->willReturnArgument(0);
 
 		$this->event->expects(self::once())
@@ -251,7 +256,7 @@ final class ShareServiceTest extends TestCase {
 		// is shared with (getAccessList's users), each as a self-contained event
 		// naming the uploader by email — that is how a co-recipient sees who
 		// uploaded and can then ask the operator for the deeper audit trail.
-		$node = $this->createMock(File::class);
+		$node = $this->createStub(File::class);
 		$node->method('getId')->willReturn(55);
 		$node->method('getName')->willReturn('report.pdf');
 
@@ -278,7 +283,7 @@ final class ShareServiceTest extends TestCase {
 
 		$service = new ShareService(
 			$this->mapper, $this->db, $this->random, $this->mail,
-			$activityManager, $shareManager, $this->createMock(LoggerInterface::class),
+			$activityManager, $shareManager, $this->createStub(LoggerInterface::class),
 		);
 		// Uploader email is canonicalized into the subject, mirroring the recipient.
 		$service->publishUploadActivity($this->existingShare('alice'), $node, 'Bob@Example.com');
@@ -288,16 +293,16 @@ final class ShareServiceTest extends TestCase {
 	}
 
 	public function testPublishUploadActivitySucceedsWhenAccessListFails(): void {
-		$node = $this->createMock(File::class);
+		$node = $this->createStub(File::class);
 		$node->method('getId')->willReturn(55);
 		$node->method('getName')->willReturn('report.pdf');
-		$shareManager = $this->createMock(IShareManager::class);
+		$shareManager = $this->createStub(IShareManager::class);
 		// A broken share/activity subsystem must never fail the (already stored) upload.
 		$shareManager->method('getAccessList')->willThrowException(new \RuntimeException('boom'));
 
 		$service = new ShareService(
 			$this->mapper, $this->db, $this->random, $this->mail,
-			$this->activityManager, $shareManager, $this->createMock(LoggerInterface::class),
+			$this->activityManager, $shareManager, $this->createStub(LoggerInterface::class),
 		);
 		$service->publishUploadActivity($this->existingShare('alice'), $node, 'bob@example.com');
 
@@ -356,7 +361,7 @@ final class ShareServiceTest extends TestCase {
 		// Another owner's share of the same file id → never listed.
 		$foreign = $this->existingShare('mallory');
 
-		$this->mapper->method('findByFileId')->with(1)
+		$this->mapper->expects(self::once())->method('findByFileId')->with(1)
 			->willReturn([$active, $graceExpired, $graceExhausted, $stale, $foreign]);
 
 		$result = $this->service->findByFileForOwner(1, 'alice', 7);

@@ -14,7 +14,7 @@ final class UploadSettingTest extends TestCase {
 	use MocksL10N;
 
 	private function setting(): UploadSetting {
-		$admin = $this->createMock(AdminConfigService::class);
+		$admin = $this->createStub(AdminConfigService::class);
 		$admin->method('getWhitelabelName')->willReturn('Atrium');
 		return new UploadSetting($this->mockL10N(), $admin);
 	}

@@ -65,7 +65,8 @@ vendor/bin/phpunit   # run the unit tests (tests/Unit)
 php -l lib/**/*.php   # lint
 ```
 
-Toolchain: PHP >= 8.1 (`composer.json`; CI builds and tests on 8.3), Composer,
+Toolchain: PHP >= 8.1 for the app (`composer.json`), PHP >= 8.4 for the dev
+tools (PHPUnit 13; CI builds and tests on 8.4), Composer,
 and Node 24 (the version CI uses). How you provide them is up to you.
 
 ## Packaging & release

@@ -12,21 +12,23 @@ use OCP\Activity\IEvent;
 use OCP\Activity\IManager;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 final class ActivityProviderTest extends TestCase {
 	use MocksL10N;
 
-	private IFactory&MockObject $languageFactory;
-	private IURLGenerator&MockObject $url;
-	private IManager&MockObject $activityManager;
+	private IFactory&Stub $languageFactory;
+	private IURLGenerator&Stub $url;
+	private IManager&Stub $activityManager;
 	private Provider $provider;
 
 	protected function setUp(): void {
-		$this->languageFactory = $this->createMock(IFactory::class);
-		$this->url = $this->createMock(IURLGenerator::class);
-		$this->activityManager = $this->createMock(IManager::class);
+		$this->languageFactory = $this->createStub(IFactory::class);
+		$this->url = $this->createStub(IURLGenerator::class);
+		$this->activityManager = $this->createStub(IManager::class);
 
 		$this->languageFactory->method('get')->willReturn($this->mockL10N());
 		$this->url->method('getAbsoluteURL')->willReturnArgument(0);
@@ -35,14 +37,14 @@ final class ActivityProviderTest extends TestCase {
 		$this->url->method('imagePath')->willReturnCallback(static fn(string $app, string $file): string => $file);
 		$this->url->method('linkToRouteAbsolute')->willReturn('https://nc/f/42');
 
-		$adminConfig = $this->createMock(AdminConfigService::class);
+		$adminConfig = $this->createStub(AdminConfigService::class);
 		$adminConfig->method('getWhitelabelName')->willReturn('Atrium');
 
 		$this->provider = new Provider($this->languageFactory, $this->url, $this->activityManager, $adminConfig);
 	}
 
 	public function testRejectsForeignApp(): void {
-		$event = $this->createMock(IEvent::class);
+		$event = $this->createStub(IEvent::class);
 		$event->method('getApp')->willReturn('some_other_app');
 
 		$this->expectException(UnknownActivityException::class);
@@ -51,14 +53,13 @@ final class ActivityProviderTest extends TestCase {
 
 	public function testRejectsUnknownSubject(): void {
 		$event = $this->makeEvent('an_unrelated_subject');
+		$event->expects(self::never())->method('setRichSubject');
 
 		$this->expectException(UnknownActivityException::class);
 		$this->provider->parse('en', $event);
 	}
 
-	/**
-	 * @dataProvider subjectRenderings
-	 */
+	#[DataProvider('subjectRenderings')]
 	public function testRendersSubject(string $subject, bool $filtered, string $expectedText, string $expectedIcon): void {
 		$this->activityManager->method('isFormattingFilteredObject')->willReturn($filtered);
 		$event = $this->makeEvent($subject, ['report.pdf', 'bob@example.com'], 42);
