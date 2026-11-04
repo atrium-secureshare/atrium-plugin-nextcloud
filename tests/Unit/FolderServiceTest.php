@@ -15,8 +15,12 @@ use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 
+// fileNode() and folderNode() build mocks because some tests set expectations
+// on them; the others only use them to stub a node tree.
+#[AllowMockObjectsWithoutExpectations]
 final class FolderServiceTest extends TestCase {
 	use MocksNodes;
 
@@ -28,7 +32,7 @@ final class FolderServiceTest extends TestCase {
 		$folder = $this->folderNode(10, [$ownerFile, $uploaded]);
 
 		$uploads = $this->createMock(AtriumUploadMapper::class);
-		$uploads->method('findByFileIds')->with([1, 2])->willReturn([
+		$uploads->expects(self::once())->method('findByFileIds')->with([1, 2])->willReturn([
 			$this->upload(2, 'carol@example.com', 'report.pdf'),
 		]);
 
@@ -49,7 +53,7 @@ final class FolderServiceTest extends TestCase {
 		$ownerFile = $this->fileNode(3, 'owner.txt');
 		$folder = $this->folderNode(10, [$mine, $others, $ownerFile]);
 
-		$uploads = $this->createMock(AtriumUploadMapper::class);
+		$uploads = $this->createStub(AtriumUploadMapper::class);
 		$uploads->method('findByFileIds')->willReturn([
 			$this->upload(1, 'bob@example.com', 'mine.pdf'),
 			$this->upload(2, 'carol@example.com', 'others.pdf'),
@@ -82,11 +86,11 @@ final class FolderServiceTest extends TestCase {
 		$child = $this->fileNode(2, 'nested.pdf');
 		$sub = $this->folderNode(20, [$child]);
 		$root = $this->folderNode(10, []);
-		$root->method('get')->with('docs/sub')->willReturn($sub);
+		$root->expects(self::once())->method('get')->with('docs/sub')->willReturn($sub);
 		$root->method('getRelativePath')->willReturn('docs/sub');
 		$sub->method('getPath')->willReturn('/alice/files/share/docs/sub');
 
-		$uploads = $this->createMock(AtriumUploadMapper::class);
+		$uploads = $this->createStub(AtriumUploadMapper::class);
 		$uploads->method('findByFileIds')->willReturn([]);
 
 		$service = new FolderService($this->resolverReturning($root), $uploads);
@@ -101,11 +105,11 @@ final class FolderServiceTest extends TestCase {
 		$file = $this->fileNode(7, 'deep.pdf');
 		$file->method('getPath')->willReturn('/alice/files/share/docs/deep.pdf');
 		$root = $this->folderNode(10, []);
-		$root->method('get')->with('docs/deep.pdf')->willReturn($file);
+		$root->expects(self::once())->method('get')->with('docs/deep.pdf')->willReturn($file);
 		$root->method('getRelativePath')->willReturn('docs/deep.pdf');
 
 		$uploads = $this->createMock(AtriumUploadMapper::class);
-		$uploads->method('findByFileIds')->with([7])->willReturn([]);
+		$uploads->expects(self::once())->method('findByFileIds')->with([7])->willReturn([]);
 
 		$service = new FolderService($this->resolverReturning($root), $uploads);
 		$result = $service->browse($this->share(AtriumShare::MODE_READ_ONLY, 'bob@example.com'), 'docs/deep.pdf');
@@ -120,7 +124,7 @@ final class FolderServiceTest extends TestCase {
 		// A `..` segment must be refused before ever touching the filesystem.
 		$root->expects(self::never())->method('get');
 
-		$service = new FolderService($this->resolverReturning($root), $this->createMock(AtriumUploadMapper::class));
+		$service = new FolderService($this->resolverReturning($root), $this->createStub(AtriumUploadMapper::class));
 		self::assertNull($service->browse($this->share(AtriumShare::MODE_READ_ONLY, 'bob@example.com'), '../secrets'));
 	}
 
@@ -130,10 +134,10 @@ final class FolderServiceTest extends TestCase {
 		$stray = $this->fileNode(9, 'stray.pdf');
 		$stray->method('getPath')->willReturn('/alice/files/other/stray.pdf');
 		$root = $this->folderNode(10, []);
-		$root->method('get')->with('x')->willReturn($stray);
+		$root->expects(self::once())->method('get')->with('x')->willReturn($stray);
 		$root->method('getRelativePath')->willReturn(null);
 
-		$service = new FolderService($this->resolverReturning($root), $this->createMock(AtriumUploadMapper::class));
+		$service = new FolderService($this->resolverReturning($root), $this->createStub(AtriumUploadMapper::class));
 		self::assertNull($service->browse($this->share(AtriumShare::MODE_READ_ONLY, 'bob@example.com'), 'x'));
 	}
 
@@ -141,7 +145,7 @@ final class FolderServiceTest extends TestCase {
 		$root = $this->folderNode(10, []);
 		$root->method('get')->willThrowException(new NotFoundException('gone'));
 
-		$service = new FolderService($this->resolverReturning($root), $this->createMock(AtriumUploadMapper::class));
+		$service = new FolderService($this->resolverReturning($root), $this->createStub(AtriumUploadMapper::class));
 		self::assertNull($service->browse($this->share(AtriumShare::MODE_READ_ONLY, 'bob@example.com'), 'missing'));
 	}
 
@@ -149,11 +153,11 @@ final class FolderServiceTest extends TestCase {
 		$child = $this->fileNode(2, 'others.pdf');
 		$child->method('getPath')->willReturn('/alice/files/share/others.pdf');
 		$folder = $this->folderNode(10, []);
-		$folder->method('getById')->with(2)->willReturn([$child]);
+		$folder->expects(self::once())->method('getById')->with(2)->willReturn([$child]);
 		$folder->method('getRelativePath')->willReturn('others.pdf');
 
 		$uploads = $this->createMock(AtriumUploadMapper::class);
-		$uploads->method('findByFileIds')->with([2])->willReturn([
+		$uploads->expects(self::once())->method('findByFileIds')->with([2])->willReturn([
 			$this->upload(2, 'carol@example.com', 'others.pdf'),
 		]);
 
@@ -165,11 +169,11 @@ final class FolderServiceTest extends TestCase {
 		$stray = $this->fileNode(9, 'stray.pdf');
 		$stray->method('getPath')->willReturn('/alice/files/other/stray.pdf');
 		$folder = $this->folderNode(10, []);
-		$folder->method('getById')->with(9)->willReturn([$stray]);
+		$folder->expects(self::once())->method('getById')->with(9)->willReturn([$stray]);
 		// A node outside the share root has no relative path to it.
 		$folder->method('getRelativePath')->willReturn(null);
 
-		$service = new FolderService($this->resolverReturning($folder), $this->createMock(AtriumUploadMapper::class));
+		$service = new FolderService($this->resolverReturning($folder), $this->createStub(AtriumUploadMapper::class));
 		self::assertNull($service->resolveChild($this->share(AtriumShare::MODE_WRITE_ALL, 'bob@example.com'), 9));
 	}
 
@@ -178,15 +182,15 @@ final class FolderServiceTest extends TestCase {
 		$nested = $this->fileNode(3, 'nested.pdf');
 		$nested->method('getPath')->willReturn('/alice/files/share/docs/nested.pdf');
 		$folder = $this->folderNode(10, []);
-		$folder->method('getById')->with(3)->willReturn([$nested]);
+		$folder->expects(self::once())->method('getById')->with(3)->willReturn([$nested]);
 		$folder->method('getRelativePath')->willReturn('docs/nested.pdf');
 
-		$service = new FolderService($this->resolverReturning($folder), $this->createMock(AtriumUploadMapper::class));
+		$service = new FolderService($this->resolverReturning($folder), $this->createStub(AtriumUploadMapper::class));
 		self::assertSame($nested, $service->resolveChild($this->share(AtriumShare::MODE_READ_ONLY, 'bob@example.com'), 3));
 	}
 
 	public function testUploadRejectedWhenModeIsReadOnly(): void {
-		$service = new FolderService($this->createMock(FileResolver::class), $this->createMock(AtriumUploadMapper::class));
+		$service = new FolderService($this->createStub(FileResolver::class), $this->createStub(AtriumUploadMapper::class));
 		$this->expectException(NotPermittedException::class);
 		$service->handleUpload($this->share(AtriumShare::MODE_READ_ONLY, 'bob@example.com'), 'bob@example.com', $this->emptyStream(), 'x.pdf');
 	}
@@ -219,7 +223,7 @@ final class FolderServiceTest extends TestCase {
 
 		$folder = $this->folderNode(10, []);
 		$folder->method('nodeExists')->willReturn(false);
-		$created = $this->createMock(File::class);
+		$created = $this->createStub(File::class);
 		$created->method('getId')->willReturn(5);
 		$created->method('getName')->willReturn('report.pdf');
 		$created->method('getSize')->willReturn(strlen($content));
@@ -242,12 +246,12 @@ final class FolderServiceTest extends TestCase {
 		// stream write that would leave the cached size stale.
 		$existingNode->expects(self::once())->method('putContent')->with(self::isStream());
 		$folder = $this->folderNode(10, []);
-		$folder->method('getById')->with(5)->willReturn([$existingNode]);
+		$folder->expects(self::once())->method('getById')->with(5)->willReturn([$existingNode]);
 		$folder->expects(self::never())->method('newFile');
 
 		$record = $this->upload(5, 'bob@example.com', 'report.pdf');
 		$uploads = $this->createMock(AtriumUploadMapper::class);
-		$uploads->method('findOwnUpload')->with(7, 'bob@example.com', 'report.pdf')->willReturn($record);
+		$uploads->expects(self::once())->method('findOwnUpload')->with(7, 'bob@example.com', 'report.pdf')->willReturn($record);
 		$uploads->expects(self::once())->method('update')->with($record);
 		$uploads->expects(self::never())->method('insert');
 
@@ -262,7 +266,7 @@ final class FolderServiceTest extends TestCase {
 		$created = $this->fileNode(5, 'note.txt');
 		$sub->expects(self::once())->method('newFile')->with('note.txt', self::isStream())->willReturn($created);
 		$root = $this->folderNode(10, []);
-		$root->method('get')->with('inbox')->willReturn($sub);
+		$root->expects(self::once())->method('get')->with('inbox')->willReturn($sub);
 		$root->method('getRelativePath')->willReturn('inbox');
 		$sub->method('getPath')->willReturn('/alice/files/share/inbox');
 
@@ -277,7 +281,7 @@ final class FolderServiceTest extends TestCase {
 		$root = $this->folderNode(10, []);
 		$root->expects(self::never())->method('get');
 
-		$service = new FolderService($this->resolverReturning($root), $this->createMock(AtriumUploadMapper::class));
+		$service = new FolderService($this->resolverReturning($root), $this->createStub(AtriumUploadMapper::class));
 		$this->expectException(NotFoundException::class);
 		$service->handleUpload($this->share(AtriumShare::MODE_WRITE_ALL, 'bob@example.com', 7), 'bob@example.com', $this->emptyStream(), 'note.txt', '../escape');
 	}

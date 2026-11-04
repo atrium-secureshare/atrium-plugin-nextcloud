@@ -53,12 +53,12 @@ final class CoreAuthMiddlewareTest extends TestCase {
 			$validator,
 			$lookup,
 			$this->context,
-			$this->createMock(LoggerInterface::class),
+			$this->createStub(LoggerInterface::class),
 		);
 	}
 
 	private function realValidator(): JWTValidator {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn($this->tokens->publicKeyPem);
 		return new JWTValidator($appConfig);
 	}
@@ -67,19 +67,19 @@ final class CoreAuthMiddlewareTest extends TestCase {
 	 * @param array<string,mixed> $claims
 	 */
 	private function validatorReturning(array $claims): JWTValidator {
-		$validator = $this->createMock(JWTValidator::class);
+		$validator = $this->createStub(JWTValidator::class);
 		$validator->method('validate')->willReturn($claims);
 		return $validator;
 	}
 
 	private function validatorThrowing(\Throwable $e): JWTValidator {
-		$validator = $this->createMock(JWTValidator::class);
+		$validator = $this->createStub(JWTValidator::class);
 		$validator->method('validate')->willThrowException($e);
 		return $validator;
 	}
 
 	private function requestWith(?string $authHeader): IRequest {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createStub(IRequest::class);
 		$request->method('getHeader')->willReturnCallback(
 			static fn(string $name): string => $name === 'Authorization' ? ($authHeader ?? '') : '',
 		);

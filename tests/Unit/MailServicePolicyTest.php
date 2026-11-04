@@ -50,25 +50,25 @@ final class MailServicePolicyTest extends TestCase {
 	private function sendingMailer(): IMailer {
 		$mailer = $this->createMock(IMailer::class);
 		$mailer->method('validateMailAddress')->willReturn(true);
-		$mailer->method('createEMailTemplate')->willReturn($this->createMock(IEMailTemplate::class));
-		$mailer->method('createMessage')->willReturn($this->createMock(IMessage::class));
+		$mailer->method('createEMailTemplate')->willReturn($this->createStub(IEMailTemplate::class));
+		$mailer->method('createMessage')->willReturn($this->createStub(IMessage::class));
 		return $mailer;
 	}
 
 	private function service(IMailer $mailer, bool $emailEnabled, bool $optOutAllowed): MailService {
-		$adminConfig = $this->createMock(AdminConfigService::class);
+		$adminConfig = $this->createStub(AdminConfigService::class);
 		$adminConfig->method('isEmailEnabled')->willReturn($emailEnabled);
 		$adminConfig->method('isEmailOptOutAllowed')->willReturn($optOutAllowed);
 
-		$factory = $this->createMock(IFactory::class);
+		$factory = $this->createStub(IFactory::class);
 		$factory->method('get')->willReturn($this->mockL10N());
 
 		return new MailService(
 			$mailer,
-			$this->createMock(IUserManager::class),
-			new PortalConfig($this->createMock(IAppConfig::class), $this->createMock(IURLGenerator::class)),
+			$this->createStub(IUserManager::class),
+			new PortalConfig($this->createStub(IAppConfig::class), $this->createStub(IURLGenerator::class)),
 			$adminConfig,
-			$this->createMock(LoggerInterface::class),
+			$this->createStub(LoggerInterface::class),
 			$factory,
 		);
 	}

@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace OCA\AtriumSecureShare\Tests\Unit;
 
 use OCA\AtriumSecureShare\Service\EmailCanonicalizer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class EmailCanonicalizerTest extends TestCase {
-	/**
-	 * @dataProvider cases
-	 */
+	#[DataProvider('cases')]
 	public function testCanonical(string $input, string $expected): void {
 		self::assertSame($expected, EmailCanonicalizer::canonical($input));
 	}

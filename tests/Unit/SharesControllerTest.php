@@ -25,7 +25,7 @@ final class SharesControllerTest extends TestCase {
 	use MocksNodes;
 
 	public function testRequiredActionMapsEndpointsAndDeniesByDefault(): void {
-		$controller = $this->controller(new CoreContext(), $this->createMock(ShareService::class), $this->createMock(FileResolver::class));
+		$controller = $this->controller(new CoreContext(), $this->createStub(ShareService::class), $this->createStub(FileResolver::class));
 		self::assertSame('list-shares', $controller->requiredAction('index'));
 		self::assertSame('download', $controller->requiredAction('content'));
 		self::assertSame('list-folder', $controller->requiredAction('folder'));
@@ -37,7 +37,7 @@ final class SharesControllerTest extends TestCase {
 	public function testIndexReturnsActiveSharesAsArrayKeyedByToken(): void {
 		$share = $this->share('tokA');
 		$service = $this->createMock(ShareService::class);
-		$service->method('findByRecipientEmail')->with('bob@example.com')->willReturn([$share]);
+		$service->expects(self::once())->method('findByRecipientEmail')->with('bob@example.com')->willReturn([$share]);
 
 		$resolver = $this->resolverReturningFile('report.pdf', 'application/pdf', 10);
 		$controller = $this->controller($this->contextFor('bob@example.com', ''), $service, $resolver);
@@ -59,7 +59,7 @@ final class SharesControllerTest extends TestCase {
 	public function testContentRejectsPathTokenNotMatchingClaim(): void {
 		$service = $this->createMock(ShareService::class);
 		$service->expects(self::never())->method('getByToken');
-		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class));
+		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class));
 
 		$response = $controller->content('tokB');
 		self::assertInstanceOf(JSONResponse::class, $response);
@@ -70,7 +70,7 @@ final class SharesControllerTest extends TestCase {
 	public function testContentReturns410WhenDownloadLimitReached(): void {
 		$share = $this->share('tokA');
 		$service = $this->createMock(ShareService::class);
-		$service->method('getByToken')->with('tokA')->willReturn($share);
+		$service->expects(self::once())->method('getByToken')->with('tokA')->willReturn($share);
 		$service->method('incrementDownloadCount')->willThrowException(new DownloadLimitReachedException('limit'));
 
 		$resolver = $this->resolverReturningFile('report.pdf', 'application/pdf', 10);
@@ -83,9 +83,9 @@ final class SharesControllerTest extends TestCase {
 	}
 
 	public function testContentReturns404WhenShareGone(): void {
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getByToken')->willThrowException(new DoesNotExistException('gone'));
-		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class));
+		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class));
 
 		$response = $controller->content('tokA');
 		self::assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
@@ -97,7 +97,7 @@ final class SharesControllerTest extends TestCase {
 		$service->method('getByToken')->willReturn($share);
 		$service->expects(self::never())->method('incrementDownloadCount');
 
-		$resolver = $this->createMock(FileResolver::class);
+		$resolver = $this->createStub(FileResolver::class);
 		$resolver->method('resolve')->willReturn(null);
 		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $resolver);
 
@@ -152,7 +152,7 @@ final class SharesControllerTest extends TestCase {
 	public function testFolderRejectsPathTokenNotMatchingClaim(): void {
 		$service = $this->createMock(ShareService::class);
 		$service->expects(self::never())->method('getByToken');
-		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class));
+		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class));
 
 		$response = $controller->folder('tokB');
 		self::assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
@@ -162,9 +162,9 @@ final class SharesControllerTest extends TestCase {
 	public function testFolderReturns404WhenShareGone(): void {
 		// folder/folderFile/upload share authorizedShare(); a missing share there is
 		// a clean 404 share_not_found (no oracle), just like content's inline path.
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getByToken')->willThrowException(new DoesNotExistException('gone'));
-		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class));
+		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class));
 
 		$response = $controller->folder('tokA');
 		self::assertInstanceOf(JSONResponse::class, $response);
@@ -175,13 +175,13 @@ final class SharesControllerTest extends TestCase {
 	public function testFolderReturnsListingFromService(): void {
 		$share = $this->share('tokA');
 		$service = $this->createMock(ShareService::class);
-		$service->method('getByToken')->with('tokA')->willReturn($share);
+		$service->expects(self::once())->method('getByToken')->with('tokA')->willReturn($share);
 
 		$result = ['is_file' => false, 'entries' => [['id' => '42', 'name' => 'report.pdf', 'is_folder' => false, 'is_own' => true]]];
 		$folder = $this->createMock(FolderService::class);
 		$folder->expects(self::once())->method('browse')->with($share, '')->willReturn($result);
 
-		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class), $folder);
+		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class), $folder);
 		$response = $controller->folder('tokA');
 		self::assertInstanceOf(JSONResponse::class, $response);
 		self::assertSame(Http::STATUS_OK, $response->getStatus());
@@ -191,12 +191,12 @@ final class SharesControllerTest extends TestCase {
 	public function testFolderReturns404WhenPathUnresolvable(): void {
 		$share = $this->share('tokA');
 		$service = $this->createMock(ShareService::class);
-		$service->method('getByToken')->with('tokA')->willReturn($share);
+		$service->expects(self::once())->method('getByToken')->with('tokA')->willReturn($share);
 
 		$folder = $this->createMock(FolderService::class);
-		$folder->method('browse')->with($share, '')->willReturn(null);
+		$folder->expects(self::once())->method('browse')->with($share, '')->willReturn(null);
 
-		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class), $folder);
+		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class), $folder);
 		$response = $controller->folder('tokA');
 		self::assertInstanceOf(JSONResponse::class, $response);
 		self::assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
@@ -205,12 +205,12 @@ final class SharesControllerTest extends TestCase {
 
 	public function testFolderFileReturns404WhenChildNotResolvable(): void {
 		$share = $this->share('tokA');
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getByToken')->willReturn($share);
 		$folder = $this->createMock(FolderService::class);
-		$folder->method('resolveChild')->with($share, 42)->willReturn(null);
+		$folder->expects(self::once())->method('resolveChild')->with($share, 42)->willReturn(null);
 
-		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class), $folder);
+		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class), $folder);
 		$response = $controller->folderFile('tokA', 42);
 		self::assertInstanceOf(JSONResponse::class, $response);
 		self::assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
@@ -222,14 +222,14 @@ final class SharesControllerTest extends TestCase {
 		// header/empty-file behaviour is covered by the content tests above; here we
 		// only assert the folder-specific wiring: the resolved child is what streams.
 		$share = $this->share('tokA');
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getByToken')->willReturn($share);
 
 		$file = $this->fileMock('inner.pdf', 'application/pdf', 7);
 		$folder = $this->createMock(FolderService::class);
-		$folder->method('resolveChild')->with($share, 42)->willReturn($file);
+		$folder->expects(self::once())->method('resolveChild')->with($share, 42)->willReturn($file);
 
-		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class), $folder);
+		$controller = $this->controller($this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class), $folder);
 		$response = $controller->folderFile('tokA', 42);
 		self::assertInstanceOf(StreamResponse::class, $response);
 		self::assertStringContainsString('attachment; filename="inner.pdf"', $this->responseHeaders($response)['Content-Disposition']);
@@ -237,13 +237,13 @@ final class SharesControllerTest extends TestCase {
 
 	public function testUploadRejectsMissingFilename(): void {
 		$share = $this->share('tokA');
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getByToken')->willReturn($share);
 		$folder = $this->createMock(FolderService::class);
 		$folder->expects(self::never())->method('handleUpload');
 
 		$controller = $this->controller(
-			$this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class),
+			$this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class),
 			$folder, $this->requestWithFilename(''),
 		);
 		$response = $controller->upload('tokA');
@@ -267,7 +267,7 @@ final class SharesControllerTest extends TestCase {
 			->with($share, $file, 'bob@example.com');
 
 		$controller = $this->controller(
-			$this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class),
+			$this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class),
 			$folder, $this->requestWithFilename('Jahres%20bericht.pdf'),
 		);
 		$response = $controller->upload('tokA');
@@ -277,14 +277,14 @@ final class SharesControllerTest extends TestCase {
 
 	public function testUploadMapsForbiddenModeTo403(): void {
 		$share = $this->share('tokA');
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getByToken')->willReturn($share);
 
-		$folder = $this->createMock(FolderService::class);
+		$folder = $this->createStub(FolderService::class);
 		$folder->method('handleUpload')->willThrowException(new \OCP\Files\NotPermittedException('read-only'));
 
 		$controller = $this->controller(
-			$this->contextFor('bob@example.com', 'tokA'), $service, $this->createMock(FileResolver::class),
+			$this->contextFor('bob@example.com', 'tokA'), $service, $this->createStub(FileResolver::class),
 			$folder, $this->requestWithFilename('report.pdf'),
 		);
 		$response = $controller->upload('tokA');
@@ -293,7 +293,7 @@ final class SharesControllerTest extends TestCase {
 	}
 
 	private function requestWithFilename(string $encodedName): IRequest {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createStub(IRequest::class);
 		$request->method('getHeader')->willReturnCallback(
 			static fn(string $name): string => $name === 'X-Atrium-Filename' ? $encodedName : '',
 		);
@@ -318,11 +318,11 @@ final class SharesControllerTest extends TestCase {
 		?IRequest $request = null,
 	): SharesController {
 		return new SharesController(
-			$request ?? $this->createMock(IRequest::class),
+			$request ?? $this->createStub(IRequest::class),
 			$service,
 			$context,
 			$resolver,
-			$folder ?? $this->createMock(FolderService::class),
+			$folder ?? $this->createStub(FolderService::class),
 		);
 	}
 

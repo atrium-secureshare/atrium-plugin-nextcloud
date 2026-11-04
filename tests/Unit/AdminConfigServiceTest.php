@@ -7,6 +7,7 @@ namespace OCA\AtriumSecureShare\Tests\Unit;
 use OCA\AtriumSecureShare\AppInfo\Application;
 use OCA\AtriumSecureShare\Service\AdminConfigService;
 use OCP\IAppConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -50,9 +51,7 @@ final class AdminConfigServiceTest extends TestCase {
 		$this->service($appConfig)->setPublicKey(self::P256_PEM);
 	}
 
-	/**
-	 * @dataProvider invalidPublicKeys
-	 */
+	#[DataProvider('invalidPublicKeys')]
 	public function testSetPublicKeyRejects(string $pem): void {
 		$this->expectException(\InvalidArgumentException::class);
 		$this->service()->setPublicKey($pem);
@@ -85,20 +84,20 @@ final class AdminConfigServiceTest extends TestCase {
 	}
 
 	public function testGetAllowedModesDefaultsToAllFour(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueArray')->willReturnArgument(2); // return the default (3rd arg)
 		self::assertSame([0, 1, 2, 3], $this->service($appConfig)->getAllowedModes());
 	}
 
 	public function testGetAllowedModesSanitisesStoredValue(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		// Duplicates, an out-of-range mode and string values are all cleaned up.
 		$appConfig->method('getValueArray')->willReturn([2, 2, '1', 9]);
 		self::assertSame([1, 2], $this->service($appConfig)->getAllowedModes());
 	}
 
 	public function testGetAllowedModesFallsBackWhenStoredEmpty(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueArray')->willReturn([]);
 		self::assertSame([0, 1, 2, 3], $this->service($appConfig)->getAllowedModes());
 	}
@@ -114,14 +113,14 @@ final class AdminConfigServiceTest extends TestCase {
 	}
 
 	public function testGetResharingPolicyDefaultsToFollowingNextcloud(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		// Return the injected default (3rd arg) so the service default surfaces.
 		$appConfig->method('getValueString')->willReturnArgument(2);
 		self::assertSame(AdminConfigService::RESHARING_FOLLOW, $this->service($appConfig)->getResharingPolicy());
 	}
 
 	public function testGetResharingPolicyFallsBackOnUnknownStoredValue(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('anything-goes');
 		self::assertSame(AdminConfigService::RESHARING_FOLLOW, $this->service($appConfig)->getResharingPolicy());
 	}
@@ -140,13 +139,13 @@ final class AdminConfigServiceTest extends TestCase {
 	}
 
 	public function testGetMaxShareDurationDaysReturnsNullWhenZero(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueInt')->willReturn(0);
 		self::assertNull($this->service($appConfig)->getMaxShareDurationDays());
 	}
 
 	public function testGetMaxShareDurationDaysReturnsConfiguredValue(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueInt')->willReturn(14);
 		self::assertSame(14, $this->service($appConfig)->getMaxShareDurationDays());
 	}
@@ -157,20 +156,20 @@ final class AdminConfigServiceTest extends TestCase {
 	}
 
 	public function testGetRetentionDaysDefaultsToSeven(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		// Return the injected default (3rd arg) so the service default surfaces.
 		$appConfig->method('getValueInt')->willReturnArgument(2);
 		self::assertSame(7, $this->service($appConfig)->getRetentionDays());
 	}
 
 	public function testGetRetentionDaysReturnsConfiguredValue(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueInt')->willReturn(0);
 		self::assertSame(0, $this->service($appConfig)->getRetentionDays());
 	}
 
 	public function testGetRetentionDaysClampsNegativeToZero(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueInt')->willReturn(-5);
 		self::assertSame(0, $this->service($appConfig)->getRetentionDays());
 	}
@@ -189,13 +188,13 @@ final class AdminConfigServiceTest extends TestCase {
 	}
 
 	public function testGetWhitelabelNameFallsBackToDefault(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('  ');
 		self::assertSame('Atrium', $this->service($appConfig)->getWhitelabelName());
 	}
 
 	public function testGetPolicyOmitsTrustKey(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('');
 		$appConfig->method('getValueBool')->willReturnArgument(2);
 		$appConfig->method('getValueArray')->willReturnArgument(2);
@@ -213,8 +212,8 @@ final class AdminConfigServiceTest extends TestCase {
 
 	private function service(?IAppConfig $appConfig = null): AdminConfigService {
 		return new AdminConfigService(
-			$appConfig ?? $this->createMock(IAppConfig::class),
-			$this->createMock(LoggerInterface::class),
+			$appConfig ?? $this->createStub(IAppConfig::class),
+			$this->createStub(LoggerInterface::class),
 		);
 	}
 }

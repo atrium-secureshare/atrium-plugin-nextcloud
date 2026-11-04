@@ -27,15 +27,16 @@ use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserSession;
 use OCP\Share\IManager as IShareManager;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class SidebarShareControllerTest extends TestCase {
 	use MocksNodes;
 
 	public function testIndexReturns404ForFileTheUserCannotSee(): void {
-		$resolver = $this->createMock(FileResolver::class);
+		$resolver = $this->createStub(FileResolver::class);
 		$resolver->method('resolve')->willReturn(null);
-		$controller = $this->controller($this->createMock(ShareService::class), $resolver);
+		$controller = $this->controller($this->createStub(ShareService::class), $resolver);
 
 		$this->expectException(OCSNotFoundException::class);
 		$controller->index(99);
@@ -45,7 +46,7 @@ final class SidebarShareControllerTest extends TestCase {
 		$share = $this->share(fileId: 99, ownerUid: 'alice');
 		$service = $this->createMock(ShareService::class);
 		// The retention window (default 7 in the test's adminConfig) is passed through.
-		$service->method('findByFileForOwner')->with(99, 'alice', 7)->willReturn([$share]);
+		$service->expects(self::once())->method('findByFileForOwner')->with(99, 'alice', 7)->willReturn([$share]);
 
 		$controller = $this->controller($service, $this->resolverReturning($this->file('report.pdf')));
 		$data = $controller->index(99)->getData();
@@ -63,13 +64,12 @@ final class SidebarShareControllerTest extends TestCase {
 	 * The model validation (independent of policy) rejects each of these before any
 	 * share is created: address shape, file vs. folder capabilities, and past expiry.
 	 *
-	 * @dataProvider invalidCreateInputs
-	 *
 	 * @param array<string,mixed> $opts
 	 */
+	#[DataProvider('invalidCreateInputs')]
 	public function testCreateRejectsInvalidModel(string $nodeType, string $email, array $opts): void {
 		$node = $nodeType === 'folder' ? $this->folder() : $this->file('a.txt');
-		$controller = $this->controller($this->createMock(ShareService::class), $this->resolverReturning($node));
+		$controller = $this->controller($this->createStub(ShareService::class), $this->resolverReturning($node));
 		$this->expectException(OCSBadRequestException::class);
 		$controller->create(99, $email, ...$opts);
 	}
@@ -86,9 +86,9 @@ final class SidebarShareControllerTest extends TestCase {
 	}
 
 	public function testCreateReturns404WhenFileMissing(): void {
-		$resolver = $this->createMock(FileResolver::class);
+		$resolver = $this->createStub(FileResolver::class);
 		$resolver->method('resolve')->willReturn(null);
-		$controller = $this->controller($this->createMock(ShareService::class), $resolver);
+		$controller = $this->controller($this->createStub(ShareService::class), $resolver);
 		$this->expectException(OCSNotFoundException::class);
 		$controller->create(99, 'bob@example.com');
 	}
@@ -113,15 +113,14 @@ final class SidebarShareControllerTest extends TestCase {
 	 * With a valid model, the share policy still rejects a mode outside the allowed
 	 * set or an expiry that violates the configured maximum duration.
 	 *
-	 * @dataProvider policyViolations
-	 *
 	 * @param array<string,mixed> $config
 	 * @param array<string,mixed> $opts
 	 */
+	#[DataProvider('policyViolations')]
 	public function testCreateRejectsByPolicy(array $config, string $nodeType, array $opts): void {
 		$node = $nodeType === 'folder' ? $this->folder() : $this->file('a.txt');
 		$controller = $this->controller(
-			$this->createMock(ShareService::class),
+			$this->createStub(ShareService::class),
 			$this->resolverReturning($node),
 			$this->adminConfig(...$config),
 		);
@@ -159,9 +158,8 @@ final class SidebarShareControllerTest extends TestCase {
 	 * Being able to see a node is not being allowed to pass it on: a node the user
 	 * only received is governed by the resharing policy, and a denial is a 403
 	 * before any share exists.
-	 *
-	 * @dataProvider reshareDenials
 	 */
+	#[DataProvider('reshareDenials')]
 	public function testCreateRejectsNodeTheUserMayNotReshare(int $maskedPermissions, int $sharePermissions, string $resharingPolicy): void {
 		$service = $this->createMock(ShareService::class);
 		$service->expects(self::never())->method('createShare');
@@ -236,7 +234,7 @@ final class SidebarShareControllerTest extends TestCase {
 	public function testPolicyForNodeIntersectsModesWithNodePermissions(): void {
 		$readOnlyFolder = $this->folder(Constants::PERMISSION_ALL & ~Constants::PERMISSION_CREATE);
 		$controller = $this->controller(
-			$this->createMock(ShareService::class),
+			$this->createStub(ShareService::class),
 			$this->resolverReturning($readOnlyFolder),
 			$this->adminConfigWithPolicy([0, 1, 2, 3]),
 		);
@@ -249,7 +247,7 @@ final class SidebarShareControllerTest extends TestCase {
 
 	public function testPolicyForNodeReportsThatSharingIsNotAllowed(): void {
 		$controller = $this->controller(
-			$this->createMock(ShareService::class),
+			$this->createStub(ShareService::class),
 			$this->resolverReturning($this->receivedFile('report.pdf', Constants::PERMISSION_ALL, Constants::PERMISSION_ALL)),
 			$this->adminConfigWithPolicy([0, 1, 2, 3]),
 			$this->nodePolicy(AdminConfigService::RESHARING_STRICT),
@@ -260,7 +258,7 @@ final class SidebarShareControllerTest extends TestCase {
 
 	public function testPolicyForUnknownNodeReturns404(): void {
 		$controller = $this->controller(
-			$this->createMock(ShareService::class),
+			$this->createStub(ShareService::class),
 			$this->resolverReturning(null),
 			$this->adminConfigWithPolicy([0, 1, 2, 3]),
 		);
@@ -270,7 +268,7 @@ final class SidebarShareControllerTest extends TestCase {
 	}
 
 	public function testPolicyReturnsPublicSubset(): void {
-		$config = $this->createMock(AdminConfigService::class);
+		$config = $this->createStub(AdminConfigService::class);
 		$config->method('getPolicy')->willReturn([
 			'emailEnabled' => true,
 			'emailOptOutAllowed' => false,
@@ -278,7 +276,7 @@ final class SidebarShareControllerTest extends TestCase {
 			'maxShareDurationDays' => 7,
 			'whitelabelName' => 'Acme Share',
 		]);
-		$controller = $this->controller($this->createMock(ShareService::class), $this->createMock(FileResolver::class), $config);
+		$controller = $this->controller($this->createStub(ShareService::class), $this->createStub(FileResolver::class), $config);
 
 		$data = $controller->policy()->getData();
 
@@ -290,25 +288,25 @@ final class SidebarShareControllerTest extends TestCase {
 	}
 
 	public function testUpdateReturns404WhenShareMissing(): void {
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getById')->willThrowException(new DoesNotExistException('gone'));
-		$controller = $this->controller($service, $this->createMock(FileResolver::class));
+		$controller = $this->controller($service, $this->createStub(FileResolver::class));
 		$this->expectException(OCSNotFoundException::class);
 		$controller->update(7);
 	}
 
 	public function testUpdateRejectsForeignOwner(): void {
 		$share = $this->share(fileId: 99, ownerUid: 'mallory');
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getById')->willReturn($share);
-		$controller = $this->controller($service, $this->createMock(FileResolver::class));
+		$controller = $this->controller($service, $this->createStub(FileResolver::class));
 		$this->expectException(OCSForbiddenException::class);
 		$controller->update(7);
 	}
 
 	public function testUpdateRejectsNonReadOnlyPermissionOnFile(): void {
 		$share = $this->share(fileId: 99, ownerUid: 'alice');
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getById')->willReturn($share);
 		$controller = $this->controller($service, $this->resolverReturning($this->file('a.txt')));
 		$this->expectException(OCSBadRequestException::class);
@@ -331,19 +329,19 @@ final class SidebarShareControllerTest extends TestCase {
 	}
 
 	public function testDestroyMapsMissingShareTo404(): void {
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getById')->willThrowException(new DoesNotExistException('gone'));
-		$controller = $this->controller($service, $this->createMock(FileResolver::class));
+		$controller = $this->controller($service, $this->createStub(FileResolver::class));
 		$this->expectException(OCSNotFoundException::class);
 		$controller->destroy(7);
 	}
 
 	public function testDestroyMapsForeignOwnerTo403(): void {
 		$share = $this->share(fileId: 99, ownerUid: 'mallory');
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('getById')->willReturn($share);
 		$service->method('revokeShare')->willThrowException(new NotPermittedException('not owner'));
-		$controller = $this->controller($service, $this->createMock(FileResolver::class));
+		$controller = $this->controller($service, $this->createStub(FileResolver::class));
 		$this->expectException(OCSForbiddenException::class);
 		$controller->destroy(7);
 	}
@@ -351,7 +349,7 @@ final class SidebarShareControllerTest extends TestCase {
 	public function testDestroyRevokesOwnedShareWithResolvedFileName(): void {
 		$share = $this->share(fileId: 99, ownerUid: 'alice');
 		$service = $this->createMock(ShareService::class);
-		$service->method('getById')->with(7)->willReturn($share);
+		$service->expects(self::once())->method('getById')->with(7)->willReturn($share);
 		// The resolved node name is threaded through so the revocation activity
 		// names the file in the stream, mirroring create.
 		$service->expects(self::once())->method('revokeShare')->with(7, 'alice', 'report.pdf');
@@ -362,7 +360,7 @@ final class SidebarShareControllerTest extends TestCase {
 	public function testOverviewMapsActiveSharesToNodeEntries(): void {
 		$share = $this->share(fileId: 99, ownerUid: 'alice');
 		$service = $this->createMock(ShareService::class);
-		$service->method('findActiveByOwner')->with('alice')->willReturn([$share]);
+		$service->expects(self::once())->method('findActiveByOwner')->with('alice')->willReturn([$share]);
 		$node = $this->overviewFile('report.pdf', '/alice/files/docs/report.pdf', 99, 1_700_000_000, 4096, 'application/pdf');
 
 		$controller = $this->controller($service, $this->resolverReturning($node));
@@ -386,11 +384,11 @@ final class SidebarShareControllerTest extends TestCase {
 	public function testOverviewSkipsSharesWhoseNodeNoLongerResolves(): void {
 		$resolvable = $this->share(fileId: 99, ownerUid: 'alice', id: 7);
 		$stale = $this->share(fileId: 100, ownerUid: 'alice', id: 8);
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('findActiveByOwner')->willReturn([$resolvable, $stale]);
 
 		$node = $this->overviewFile('report.pdf', '/alice/files/report.pdf', 99, 1, 1, 'text/plain');
-		$resolver = $this->createMock(FileResolver::class);
+		$resolver = $this->createStub(FileResolver::class);
 		$resolver->method('resolve')->willReturnCallback(
 			static fn(string $uid, int $fileId) => $fileId === 99 ? $node : null,
 		);
@@ -406,7 +404,7 @@ final class SidebarShareControllerTest extends TestCase {
 		// entries — the overview never deduplicates by file.
 		$first = $this->share(fileId: 99, ownerUid: 'alice', id: 7);
 		$second = $this->share(fileId: 99, ownerUid: 'alice', id: 8);
-		$service = $this->createMock(ShareService::class);
+		$service = $this->createStub(ShareService::class);
 		$service->method('findActiveByOwner')->willReturn([$first, $second]);
 
 		$node = $this->overviewFile('report.pdf', '/alice/files/report.pdf', 99, 1, 1, 'application/pdf');
@@ -425,7 +423,7 @@ final class SidebarShareControllerTest extends TestCase {
 		?NodeSharePolicy $nodePolicy = null,
 	): SidebarShareController {
 		return new SidebarShareController(
-			$this->createMock(IRequest::class),
+			$this->createStub(IRequest::class),
 			$service,
 			$resolver,
 			$this->portalConfig(),
@@ -441,9 +439,9 @@ final class SidebarShareControllerTest extends TestCase {
 	 * node permissions.
 	 */
 	private function nodePolicy(string $resharingPolicy = AdminConfigService::RESHARING_FOLLOW): NodeSharePolicy {
-		$adminConfig = $this->createMock(AdminConfigService::class);
+		$adminConfig = $this->createStub(AdminConfigService::class);
 		$adminConfig->method('getResharingPolicy')->willReturn($resharingPolicy);
-		$shareManager = $this->createMock(IShareManager::class);
+		$shareManager = $this->createStub(IShareManager::class);
 		$shareManager->method('sharingDisabledForUser')->willReturn(false);
 		return new NodeSharePolicy($adminConfig, $shareManager);
 	}
@@ -454,7 +452,7 @@ final class SidebarShareControllerTest extends TestCase {
 	 * policy-enforcement tests pass their own with allowedModes/maxDays configured.
 	 */
 	private function adminConfig(array $allowedModes = [0, 1, 2, 3], ?int $maxDays = null, int $retentionDays = 7): AdminConfigService {
-		$config = $this->createMock(AdminConfigService::class);
+		$config = $this->createStub(AdminConfigService::class);
 		$config->method('getAllowedModes')->willReturn($allowedModes);
 		$config->method('getMaxShareDurationDays')->willReturn($maxDays);
 		$config->method('getRetentionDays')->willReturn($retentionDays);
@@ -468,7 +466,7 @@ final class SidebarShareControllerTest extends TestCase {
 	 * @param int[] $allowedModes
 	 */
 	private function adminConfigWithPolicy(array $allowedModes): AdminConfigService {
-		$config = $this->createMock(AdminConfigService::class);
+		$config = $this->createStub(AdminConfigService::class);
 		$config->method('getPolicy')->willReturn([
 			'emailEnabled' => true,
 			'emailOptOutAllowed' => true,
@@ -481,21 +479,21 @@ final class SidebarShareControllerTest extends TestCase {
 
 	/** portalConfig builds a real PortalConfig (final, so not mockable) over mocks. */
 	private function portalConfig(): PortalConfig {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('');
-		$url = $this->createMock(IURLGenerator::class);
+		$url = $this->createStub(IURLGenerator::class);
 		$url->method('getBaseUrl')->willReturn('https://portal.example');
 		return new PortalConfig($appConfig, $url);
 	}
 
 	private function userSession(string $uid): IUserSession {
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createStub(IUserSession::class);
 		$session->method('getUser')->willReturn($this->user($uid));
 		return $session;
 	}
 
 	private function user(string $uid): IUser {
-		$user = $this->createMock(IUser::class);
+		$user = $this->createStub(IUser::class);
 		$user->method('getUID')->willReturn($uid);
 		return $user;
 	}
@@ -505,7 +503,7 @@ final class SidebarShareControllerTest extends TestCase {
 	 * ordinary case; the node-permission tests pass their own.
 	 */
 	private function file(string $name, int $permissions = Constants::PERMISSION_ALL): File {
-		$file = $this->createMock(File::class);
+		$file = $this->createStub(File::class);
 		$file->method('getName')->willReturn($name);
 		$file->method('getPermissions')->willReturn($permissions);
 		$file->method('getStorage')->willReturn($this->storageMock());
@@ -513,7 +511,7 @@ final class SidebarShareControllerTest extends TestCase {
 	}
 
 	private function folder(int $permissions = Constants::PERMISSION_ALL): Folder {
-		$folder = $this->createMock(Folder::class);
+		$folder = $this->createStub(Folder::class);
 		$folder->method('getName')->willReturn('shared-folder');
 		$folder->method('getPermissions')->willReturn($permissions);
 		$folder->method('getStorage')->willReturn($this->storageMock());
@@ -526,7 +524,7 @@ final class SidebarShareControllerTest extends TestCase {
 	 * clears the share bit there), $sharePermissions what the owner granted.
 	 */
 	private function receivedFile(string $name, int $maskedPermissions, int $sharePermissions): File {
-		$file = $this->createMock(File::class);
+		$file = $this->createStub(File::class);
 		$file->method('getName')->willReturn($name);
 		$file->method('getPermissions')->willReturn($maskedPermissions);
 		$file->method('getStorage')->willReturn($this->sharedStorageMock($sharePermissions));
@@ -535,7 +533,7 @@ final class SidebarShareControllerTest extends TestCase {
 	}
 
 	private function overviewFile(string $name, string $path, int $fileId, int $mtime, int $size, string $mime): File {
-		$file = $this->createMock(File::class);
+		$file = $this->createStub(File::class);
 		$file->method('getName')->willReturn($name);
 		$file->method('getPath')->willReturn($path);
 		$file->method('getId')->willReturn($fileId);

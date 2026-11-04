@@ -22,9 +22,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
-          # Matches the local toolchain documented in AGENTS.md; composer.json
-          # requires >= 8.1.
-          php-version: '8.3'
+          # Matches the local toolchain documented in AGENTS.md. The app itself
+          # requires >= 8.1 (composer.json), but PHPUnit 13 needs >= 8.4.
+          php-version: '8.4'
           tools: composer
       # Catches info.xml schema violations here instead of at App Store upload.
       - name: Validate appinfo/info.xml

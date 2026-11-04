@@ -9,6 +9,7 @@ use OCA\AtriumSecureShare\Exception\TrustNotConfiguredException;
 use OCA\AtriumSecureShare\Service\JWTValidator;
 use OCA\AtriumSecureShare\Tests\TokenFactory;
 use OCP\IAppConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class JWTValidatorTest extends TestCase {
@@ -19,7 +20,7 @@ final class JWTValidatorTest extends TestCase {
 	}
 
 	private function validatorWithKey(string $publicKey): JWTValidator {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createStub(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn($publicKey);
 		return new JWTValidator($appConfig);
 	}
@@ -40,9 +41,7 @@ final class JWTValidatorTest extends TestCase {
 		$this->validatorWithKey('')->validate($this->tokens->valid());
 	}
 
-	/**
-	 * @dataProvider manipulatedTokens
-	 */
+	#[DataProvider('manipulatedTokens')]
 	public function testManipulatedTokensAreRejected(string $case, string $expectedErrorCode): void {
 		try {
 			$this->validator()->validate($this->tokenFor($case));

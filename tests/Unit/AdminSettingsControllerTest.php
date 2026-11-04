@@ -58,7 +58,7 @@ final class AdminSettingsControllerTest extends TestCase {
 	}
 
 	public function testUpdateInvalidValueReturns400WithMessage(): void {
-		$config = $this->createMock(AdminConfigService::class);
+		$config = $this->createStub(AdminConfigService::class);
 		$config->method('getPublicKey')->willReturn('');
 		$config->method('setPublicKey')->willThrowException(new \InvalidArgumentException('key must use the P-256 (prime256v1) curve'));
 
@@ -70,7 +70,7 @@ final class AdminSettingsControllerTest extends TestCase {
 
 	private function controller(AdminConfigService $config): AdminSettingsController {
 		return new AdminSettingsController(
-			$this->createMock(IRequest::class),
+			$this->createStub(IRequest::class),
 			$config,
 		);
 	}

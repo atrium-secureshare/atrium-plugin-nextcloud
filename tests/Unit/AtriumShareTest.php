@@ -6,14 +6,15 @@ namespace OCA\AtriumSecureShare\Tests\Unit;
 
 use OCA\AtriumSecureShare\Db\AtriumShare;
 use OCA\AtriumSecureShare\Tests\ShareFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class AtriumShareTest extends TestCase {
 	/**
-	 * @dataProvider statusCases
 	 *
 	 * @param array<string,mixed> $overrides
 	 */
+	#[DataProvider('statusCases')]
 	public function testDerivedStatus(
 		array $overrides,
 		bool $expired,

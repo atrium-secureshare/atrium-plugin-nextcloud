@@ -25,7 +25,7 @@ final class PersistedShareLookupTest extends TestCase {
 	}
 
 	public function testUnknownTokenResolvesToNull(): void {
-		$mapper = $this->createMock(AtriumShareMapper::class);
+		$mapper = $this->createStub(AtriumShareMapper::class);
 		$mapper->method('findByToken')->willThrowException(new DoesNotExistException('nope'));
 
 		self::assertNull((new PersistedShareLookup($mapper))->find('missing'));
@@ -33,7 +33,7 @@ final class PersistedShareLookupTest extends TestCase {
 
 	public function testExpiredShareIsNotAccessible(): void {
 		$share = ShareFactory::make(['token' => 'tok123', 'expiresAt' => new \DateTime('-1 hour')]);
-		$mapper = $this->createMock(AtriumShareMapper::class);
+		$mapper = $this->createStub(AtriumShareMapper::class);
 		$mapper->method('findByToken')->willReturn($share);
 
 		$info = (new PersistedShareLookup($mapper))->find('tok123');

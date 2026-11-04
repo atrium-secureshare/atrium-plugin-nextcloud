@@ -12,6 +12,7 @@ use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\Node;
 use OCP\Share\IManager as IShareManager;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class NodeSharePolicyTest extends TestCase {
@@ -31,9 +32,8 @@ final class NodeSharePolicyTest extends TestCase {
 	/**
 	 * A share whose permissions carry no share bit is the file owner's own denial.
 	 * It outranks every admin option, including the permissive one.
-	 *
-	 * @dataProvider resharingPolicies
 	 */
+	#[DataProvider('resharingPolicies')]
 	public function testOwnerDenialIsNeverOverridden(string $resharingPolicy): void {
 		// The node mask still says yes, so only the share itself can refuse here.
 		$node = $this->receivedNode(
@@ -53,9 +53,8 @@ final class NodeSharePolicyTest extends TestCase {
 	 * With the owner's grant in place, the admin option decides how Nextcloud's
 	 * global resharing setting applies. Nextcloud reports that setting by clearing
 	 * the share bit from the node mask, which is why the two are read separately.
-	 *
-	 * @dataProvider reshareMatrix
 	 */
+	#[DataProvider('reshareMatrix')]
 	public function testReshareFollowsTheAdminOption(string $resharingPolicy, bool $globallyAllowed, bool $expected): void {
 		$masked = $globallyAllowed ? Constants::PERMISSION_ALL : Constants::PERMISSION_ALL & ~Constants::PERMISSION_SHARE;
 		$node = $this->receivedNode($masked, Constants::PERMISSION_ALL);
@@ -98,7 +97,7 @@ final class NodeSharePolicyTest extends TestCase {
 	}
 
 	public function testFileOffersReadOnlyOnly(): void {
-		$file = $this->createMock(File::class);
+		$file = $this->createStub(File::class);
 		$file->method('getPermissions')->willReturn(Constants::PERMISSION_ALL);
 
 		self::assertSame([0], $this->policy()->availableModes($file));
@@ -128,16 +127,16 @@ final class NodeSharePolicyTest extends TestCase {
 		string $resharingPolicy = AdminConfigService::RESHARING_FOLLOW,
 		bool $sharingDisabledForUser = false,
 	): NodeSharePolicy {
-		$adminConfig = $this->createMock(AdminConfigService::class);
+		$adminConfig = $this->createStub(AdminConfigService::class);
 		$adminConfig->method('getResharingPolicy')->willReturn($resharingPolicy);
-		$shareManager = $this->createMock(IShareManager::class);
+		$shareManager = $this->createStub(IShareManager::class);
 		$shareManager->method('sharingDisabledForUser')->willReturn($sharingDisabledForUser);
 		return new NodeSharePolicy($adminConfig, $shareManager);
 	}
 
 	/** ownNode is a node on the user's own storage, so no share governs it. */
 	private function ownNode(int $permissions): Node {
-		$node = $this->createMock(Node::class);
+		$node = $this->createStub(Node::class);
 		$node->method('getPermissions')->willReturn($permissions);
 		$node->method('getStorage')->willReturn($this->storageMock());
 		return $node;
@@ -149,7 +148,7 @@ final class NodeSharePolicyTest extends TestCase {
 	 * restriction, $sharePermissions what the file's owner actually granted.
 	 */
 	private function receivedNode(int $maskedPermissions, int $sharePermissions, bool $mountAllowsSharing = true): Node {
-		$node = $this->createMock(Node::class);
+		$node = $this->createStub(Node::class);
 		$node->method('getPermissions')->willReturn($maskedPermissions);
 		$node->method('getStorage')->willReturn($this->sharedStorageMock($sharePermissions));
 		$node->method('getMountPoint')->willReturn($this->mountMock($mountAllowsSharing));
@@ -157,7 +156,7 @@ final class NodeSharePolicyTest extends TestCase {
 	}
 
 	private function folderWith(int $permissions): Folder {
-		$folder = $this->createMock(Folder::class);
+		$folder = $this->createStub(Folder::class);
 		$folder->method('getPermissions')->willReturn($permissions);
 		return $folder;
 	}
