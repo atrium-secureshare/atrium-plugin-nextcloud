@@ -11,7 +11,7 @@
     "require-dev": {
         "doctrine/dbal": "^4",
         "nextcloud/ocp": "^35.0",
-        "phpunit/phpunit": "^10"
+        "phpunit/phpunit": "^13"
     },
     "config": {
         "optimize-autoloader": true,
